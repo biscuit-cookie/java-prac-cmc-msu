@@ -4,7 +4,7 @@
 ---
 На любой странице есть возможность вернуться на главную страницу
 
-TO BE ADDED
+![alt text](https://github.com/biscuit-cookie/java-prac-cmc-msu/blob/d14350def1190d94b42746bcfaf1f83ef0db1131/pictures/Java%20task%20webpage%20diagram.drawio.png "Диаграмма страниц")
 ---
 ### Главная страница
 - Ссылка на страницу для создания дерева
@@ -38,7 +38,7 @@ TO BE ADDED
 
 Схема базы данных
 ---
-TO BE ADDED
+![alt text](https://github.com/biscuit-cookie/java-prac-cmc-msu/blob/d14350def1190d94b42746bcfaf1f83ef0db1131/pictures/Java%20task%20DB%20diagram.png "Схема БД")
 ---
 
 Сценарии использования
