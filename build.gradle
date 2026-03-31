@@ -43,6 +43,14 @@ tasks.named('test') {
 	useTestNG()
 }
 
+tasks.withType(Test).configureEach {
+	afterSuite { desc, result ->
+		if (!desc.parent) {
+			println("Tests run: ${result.testCount}")
+		}
+	}
+}
+
 jacoco {
 	toolVersion = '0.8.11'
 }
