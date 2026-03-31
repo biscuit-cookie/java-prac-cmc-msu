@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.cmc.msu.genealogy.dao.impl.CommonDAOImplMockTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-03-31T14:06:07" hostname="userinvalid" time="0.504">
+  <properties/>
+  <testcase name="testGetByIdAndGetAllFailure" classname="ru.cmc.msu.genealogy.dao.impl.CommonDAOImplMockTest" time="0.25"/>
+  <testcase name="testGetByIdAndGetAllSuccess" classname="ru.cmc.msu.genealogy.dao.impl.CommonDAOImplMockTest" time="0.197"/>
+  <testcase name="testSaveAndSaveCollectionFailure" classname="ru.cmc.msu.genealogy.dao.impl.CommonDAOImplMockTest" time="0.038"/>
+  <testcase name="testSaveAndSaveCollectionSuccess" classname="ru.cmc.msu.genealogy.dao.impl.CommonDAOImplMockTest" time="0.006"/>
+  <testcase name="testUpdateAndDeleteFailure" classname="ru.cmc.msu.genealogy.dao.impl.CommonDAOImplMockTest" time="0.004"/>
+  <testcase name="testUpdateDeleteAndDeleteByIdSuccessBranches" classname="ru.cmc.msu.genealogy.dao.impl.CommonDAOImplMockTest" time="0.007"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

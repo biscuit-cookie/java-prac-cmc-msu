@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HibernateDatabaseConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">genealogy</a> &gt; <a href="index.source.html" class="el_package">ru.cmc.msu.genealogy.configs</a> &gt; <span class="el_source">HibernateDatabaseConfig.java</span></div><h1>HibernateDatabaseConfig.java</h1><pre class="source lang-java linenums">package ru.cmc.msu.genealogy.configs;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
+
+import javax.sql.DataSource;
+import java.util.Properties;
+
+@Configuration
+@PropertySource(&quot;classpath:application.properties&quot;)
+<span class="fc" id="L15">public class HibernateDatabaseConfig {</span>
+
+    @Value(&quot;${db.driver}&quot;)
+    private String dbDriver;
+
+    @Value(&quot;${db.url}&quot;)
+    private String dbUrl;
+
+    @Value(&quot;${db.username}&quot;)
+    private String dbUsername;
+
+    @Value(&quot;${db.password}&quot;)
+    private String dbPassword;
+
+    @Value(&quot;${hibernate.dialect}&quot;)
+    private String hibernateDialect;
+
+    @Value(&quot;${hibernate.hbm2ddl.auto}&quot;)
+    private String hbm2ddlAuto;
+
+    @Value(&quot;${hibernate.show_sql}&quot;)
+    private String showSql;
+
+    @Value(&quot;${hibernate.format_sql}&quot;)
+    private String formatSql;
+
+    @Bean
+    public LocalSessionFactoryBean sessionFactory() {
+<span class="fc" id="L43">        LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();</span>
+<span class="fc" id="L44">        sessionFactory.setDataSource(dataSource());</span>
+<span class="fc" id="L45">        sessionFactory.setPackagesToScan(&quot;ru.cmc.msu.genealogy.models&quot;);</span>
+<span class="fc" id="L46">        sessionFactory.setHibernateProperties(hibernateProperties());</span>
+<span class="fc" id="L47">        return sessionFactory;</span>
+    }
+
+    @Bean
+    public DataSource dataSource() {
+<span class="fc" id="L52">        DriverManagerDataSource dataSource = new DriverManagerDataSource();</span>
+<span class="fc" id="L53">        dataSource.setDriverClassName(dbDriver);</span>
+<span class="fc" id="L54">        dataSource.setUrl(dbUrl);</span>
+<span class="fc" id="L55">        dataSource.setUsername(dbUsername);</span>
+<span class="fc" id="L56">        dataSource.setPassword(dbPassword);</span>
+<span class="fc" id="L57">        return dataSource;</span>
+    }
+
+    private Properties hibernateProperties() {
+<span class="fc" id="L61">        Properties properties = new Properties();</span>
+<span class="fc" id="L62">        properties.setProperty(&quot;hibernate.dialect&quot;, hibernateDialect);</span>
+<span class="fc" id="L63">        properties.setProperty(&quot;hibernate.hbm2ddl.auto&quot;, hbm2ddlAuto);</span>
+<span class="fc" id="L64">        properties.setProperty(&quot;hibernate.show_sql&quot;, showSql);</span>
+<span class="fc" id="L65">        properties.setProperty(&quot;hibernate.format_sql&quot;, formatSql);</span>
+<span class="fc" id="L66">        properties.setProperty(&quot;hibernate.current_session_context_class&quot;, &quot;thread&quot;);</span>
+<span class="fc" id="L67">        return properties;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

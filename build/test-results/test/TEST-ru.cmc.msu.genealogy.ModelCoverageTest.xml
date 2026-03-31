@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.cmc.msu.genealogy.ModelCoverageTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-03-31T14:05:57" hostname="userinvalid" time="1.804">
+  <properties/>
+  <testcase name="testApplicationMain" classname="ru.cmc.msu.genealogy.ModelCoverageTest" time="1.749"/>
+  <testcase name="testPersonConstructorsAccessorsAndCommonEntityContract" classname="ru.cmc.msu.genealogy.ModelCoverageTest" time="0.02"/>
+  <testcase name="testPersonEqualsAndHashCode" classname="ru.cmc.msu.genealogy.ModelCoverageTest" time="0.0"/>
+  <testcase name="testPersonPlaceConstructorsAccessorsEqualsAndHashCode" classname="ru.cmc.msu.genealogy.ModelCoverageTest" time="0.007"/>
+  <testcase name="testPersonPlaceIdEqualsHashCodeAndAccessors" classname="ru.cmc.msu.genealogy.ModelCoverageTest" time="0.001"/>
+  <testcase name="testPlaceConstructorsAccessorsEqualsAndHashCode" classname="ru.cmc.msu.genealogy.ModelCoverageTest" time="0.001"/>
+  <testcase name="testRelationConstructorsAccessorsEqualsAndHashCode" classname="ru.cmc.msu.genealogy.ModelCoverageTest" time="0.007"/>
+  <testcase name="testRelationTypeEnum" classname="ru.cmc.msu.genealogy.ModelCoverageTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PersonPlaceDAOImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">genealogy</a> &gt; <a href="index.source.html" class="el_package">ru.cmc.msu.genealogy.dao.impl</a> &gt; <span class="el_source">PersonPlaceDAOImpl.java</span></div><h1>PersonPlaceDAOImpl.java</h1><pre class="source lang-java linenums">package ru.cmc.msu.genealogy.dao.impl;
+
+import org.hibernate.Session;
+import org.springframework.stereotype.Repository;
+import ru.cmc.msu.genealogy.dao.PersonPlaceDAO;
+import ru.cmc.msu.genealogy.models.Person;
+import ru.cmc.msu.genealogy.models.PersonPlace;
+import ru.cmc.msu.genealogy.models.PersonPlaceId;
+import ru.cmc.msu.genealogy.models.Place;
+
+import java.util.List;
+
+@Repository
+public class PersonPlaceDAOImpl extends CommonDAOImpl&lt;PersonPlace, PersonPlaceId&gt; implements PersonPlaceDAO {
+
+    public PersonPlaceDAOImpl() {
+<span class="fc" id="L17">        super(PersonPlace.class);</span>
+<span class="fc" id="L18">    }</span>
+
+    @Override
+    public List&lt;PersonPlace&gt; getByPerson(Person person) {
+<span class="fc" id="L22">        try (Session session = sessionFactory.openSession()) {</span>
+<span class="fc" id="L23">            return session.createQuery(</span>
+                    &quot;from PersonPlace pp where pp.person = :person order by pp.place.name&quot;,
+                    PersonPlace.class
+<span class="fc" id="L26">            ).setParameter(&quot;person&quot;, person).list();</span>
+        }
+    }
+
+    @Override
+    public List&lt;PersonPlace&gt; getByPlace(Place place) {
+<span class="fc" id="L32">        try (Session session = sessionFactory.openSession()) {</span>
+<span class="fc" id="L33">            return session.createQuery(</span>
+                    &quot;from PersonPlace pp where pp.place = :place order by pp.person.name&quot;,
+                    PersonPlace.class
+<span class="fc" id="L36">            ).setParameter(&quot;place&quot;, place).list();</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
