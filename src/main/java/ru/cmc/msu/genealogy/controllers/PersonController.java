@@ -347,7 +347,7 @@ public class PersonController {
         return new RelationFormView(
                 relation.getId(),
                 relatedPersonForForm.getId(),
-                relationKindOption == null ? "" : relationKindOption.getCode(),
+                relationKindOption.getCode(),
                 relation.getDateOfBeginning(),
                 relation.getDateOfEnd()
         );
@@ -355,7 +355,7 @@ public class PersonController {
 
     private String relationTypeLabel(Relation relation, Person person) {
         RelationKindOption relationKindOption = relationKindForPerson(person, relation);
-        return relationKindOption == null ? relation.getRelationshipType().name() : relationKindOption.getLabel();
+        return relationKindOption.getLabel();
     }
 
     private Person relatedPersonForView(Relation relation, Person person) {
@@ -364,27 +364,19 @@ public class PersonController {
 
     private RelationKindOption relationKindForPerson(Person person, Relation relation) {
         RelationType relationType = relation.getRelationshipType();
-        if (relationType == RelationType.PARTNER) {
-            return new RelationKindOption("PARTNER", "Супруг(а)");
-        }
-
         boolean personIsTarget = person.equals(relation.getTargetPerson());
-        switch (relationType) {
-            case WEDLOCK_CHILD:
-                return personIsTarget
-                        ? new RelationKindOption("PARENT", "Родитель")
-                        : new RelationKindOption("CHILD", "Ребенок");
-            case ADOPTED_CHILD:
-                return personIsTarget
-                        ? new RelationKindOption("ADOPTIVE_PARENT", "Приемный родитель")
-                        : new RelationKindOption("ADOPTED_CHILD", "Приемный ребенок");
-            case BASTARD_CHILD:
-                return personIsTarget
-                        ? new RelationKindOption("PARENT_OUT_OF_WEDLOCK", "Родитель вне брака")
-                        : new RelationKindOption("BASTARD_CHILD", "Внебрачный ребенок");
-            default:
-                return null;
-        }
+        return switch (relationType) {
+            case PARTNER -> new RelationKindOption("PARTNER", "Супруг(а)");
+            case WEDLOCK_CHILD -> personIsTarget
+                    ? new RelationKindOption("PARENT", "Родитель")
+                    : new RelationKindOption("CHILD", "Ребенок");
+            case ADOPTED_CHILD -> personIsTarget
+                    ? new RelationKindOption("ADOPTIVE_PARENT", "Приемный родитель")
+                    : new RelationKindOption("ADOPTED_CHILD", "Приемный ребенок");
+            case BASTARD_CHILD -> personIsTarget
+                    ? new RelationKindOption("PARENT_OUT_OF_WEDLOCK", "Родитель вне брака")
+                    : new RelationKindOption("BASTARD_CHILD", "Внебрачный ребенок");
+        };
     }
 
     private List<RelationKindOption> relationKindOptions() {

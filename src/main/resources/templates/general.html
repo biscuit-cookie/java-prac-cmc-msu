@@ -9,7 +9,7 @@
 <body>
 <nav th:fragment="page-header" class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-        <a class="navbar-brand" id="rootLink" th:href="@{/}">Генеалогия</a>
+        <a class="navbar-brand" id="rootLink" th:href="@{/}">Генеалогия. Практическое задание</a>
         <div class="navbar-nav gap-2">
             <a class="nav-link" id="peopleListLink" th:href="@{/persons}">Люди</a>
             <a class="nav-link" id="placesListLink" th:href="@{/places}">Места</a>
@@ -19,7 +19,11 @@
 </nav>
 
 <div th:fragment="page-footer" class="container py-4 text-secondary small">
-    Практикум по разработке web-приложения, этап 3.
+    <p style="text-align: center;">
+        Практикум по разработке web-приложения.<br>
+        Ресурс создан на Java 17 с помощью Spring, ThemeLeaf.<br>
+        База данных на PostgreSQL.<br>
+    </p>
 </div>
 </body>
 </html>

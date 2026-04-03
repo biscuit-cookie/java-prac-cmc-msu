@@ -218,16 +218,12 @@ public class GenealogyTreeService {
 
     private String relationLabelFromPerspective(Person perspective, Relation relation) {
         RelationType relationType = relation.getRelationshipType();
-        if (relationType == RelationType.PARTNER) {
-            return "супруг(а)";
-        }
-
         boolean perspectiveIsTarget = relation.getTargetPerson().equals(perspective);
         return switch (relationType) {
+            case PARTNER -> "супруг(а)";
             case WEDLOCK_CHILD -> perspectiveIsTarget ? "родитель" : "ребенок";
             case ADOPTED_CHILD -> perspectiveIsTarget ? "приемный родитель" : "приемный ребенок";
             case BASTARD_CHILD -> perspectiveIsTarget ? "родитель вне брака" : "внебрачный ребенок";
-            default -> relationType.name().toLowerCase();
         };
     }
 
