@@ -46,6 +46,18 @@ INSERT INTO person_place (person_id, place_id) VALUES
     (9, 2),
     (10, 5);
 
-SELECT setval('person_person_id_seq', (SELECT MAX(person_id) FROM person));
-SELECT setval('place_place_id_seq', (SELECT MAX(place_id) FROM place));
-SELECT setval('relation_relation_id_seq', (SELECT MAX(relation_id) FROM relation));
+SELECT setval(
+    pg_get_serial_sequence('person', 'person_id'),
+    COALESCE((SELECT MAX(person_id) FROM person), 1),
+    true
+);
+SELECT setval(
+    pg_get_serial_sequence('place', 'place_id'),
+    COALESCE((SELECT MAX(place_id) FROM place), 1),
+    true
+);
+SELECT setval(
+    pg_get_serial_sequence('relation', 'relation_id'),
+    COALESCE((SELECT MAX(relation_id) FROM relation), 1),
+    true
+);

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="general :: head('Параметры дерева')"></head>
+<body class="bg-light">
+<div th:replace="general :: page-header"></div>
+<main class="container py-4">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h1 class="h2 mb-4">Параметры генеалогического дерева</h1>
+                <form th:action="@{/tree}" method="get">
+                    <div class="mb-3">
+                        <label class="form-label" for="primaryPersonId">Основной человек</label>
+                        <select class="form-select" id="primaryPersonId" name="primaryPersonId">
+                            <option value="">Выберите человека</option>
+                            <option th:each="person : ${people}" th:value="${person.id}" th:text="${person.name}">Человек</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="secondaryPersonId">Второй человек (необязательно)</label>
+                        <select class="form-select" id="secondaryPersonId" name="secondaryPersonId">
+                            <option value="">Не использовать</option>
+                            <option th:each="person : ${people}" th:value="${person.id}" th:text="${person.name}">Человек</option>
+                        </select>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="direction">Направление дерева</label>
+                            <select class="form-select" id="direction" name="direction">
+                                <option value="ancestors">Предки</option>
+                                <option value="descendants">Потомки</option>
+                                <option value="mixed">Смешанный режим</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="depth">Глубина</label>
+                            <input class="form-control" id="depth" name="depth" type="number" min="1" max="10" value="2">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary mt-4" id="buildTreeButton" type="submit">Перейти к результату</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+<div th:replace="general :: page-footer"></div>
+</body>
+</html>

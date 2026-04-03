@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="general :: head('Результат построения дерева')"></head>
+<body class="bg-light">
+<div th:replace="general :: page-header"></div>
+<main class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h1 class="h2 mb-4">Результат построения дерева</h1>
+
+            <div id="treeSummary" th:if="${primaryPerson != null}">
+                <p><strong>Основной человек:</strong> <span th:text="${primaryPerson.name}">Имя</span></p>
+                <p><strong>Второй человек:</strong> <span th:text="${secondaryPerson != null ? secondaryPerson.name : 'не выбран'}">не выбран</span></p>
+                <p><strong>Направление:</strong> <span th:text="${treeResult.direction.label}">Предки</span></p>
+                <p><strong>Глубина:</strong> <span th:text="${depth}">2</span></p>
+            </div>
+
+            <div th:if="${primaryPerson != null}" class="mt-4">
+                <section class="mb-4" th:if="${!#lists.isEmpty(treeResult.partners)}">
+                    <h2 class="h4">Супруги и партнеры</h2>
+                    <ul class="mb-0">
+                        <li th:each="partner : ${treeResult.partners}">
+                            <a th:href="@{/person(personId=${partner.person.id})}" th:text="${partner.person.name}">Человек</a>
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="mb-4" th:if="${treeResult.ancestorsRoot != null}">
+                    <h2 class="h4">Ветвь предков</h2>
+                    <div th:if="${!#lists.isEmpty(treeResult.ancestorsRoot.children)}">
+                        <th:block th:each="ancestor : ${treeResult.ancestorsRoot.children}">
+                            <div th:replace="~{this :: treeNode(node=${ancestor})}"></div>
+                        </th:block>
+                    </div>
+                    <p class="mb-0 text-secondary" th:if="${#lists.isEmpty(treeResult.ancestorsRoot.children)}">
+                        Для выбранного человека в текущих данных не найдено предков на указанной глубине.
+                    </p>
+                </section>
+
+                <section class="mb-4" th:if="${treeResult.descendantsRoot != null}">
+                    <h2 class="h4">Ветвь потомков</h2>
+                    <div th:if="${!#lists.isEmpty(treeResult.descendantsRoot.children)}">
+                        <th:block th:each="descendant : ${treeResult.descendantsRoot.children}">
+                            <div th:replace="~{this :: treeNode(node=${descendant})}"></div>
+                        </th:block>
+                    </div>
+                    <p class="mb-0 text-secondary" th:if="${#lists.isEmpty(treeResult.descendantsRoot.children)}">
+                        Для выбранного человека в текущих данных не найдено потомков на указанной глубине.
+                    </p>
+                </section>
+
+                <section id="treeConnectionSection" th:if="${secondaryPerson != null}">
+                    <h2 class="h4">Дерево связи между людьми</h2>
+                    <div id="treeConnectionGraph" th:if="${treeResult.connectionTree != null}" class="mb-3">
+                        <div th:replace="~{this :: connectionTreeNode(node=${treeResult.connectionTree})}"></div>
+                    </div>
+                    <h3 class="h6 text-secondary">Пошаговая цепочка</h3>
+                    <ol id="treeConnectionList" th:if="${!#lists.isEmpty(treeResult.connectionPath)}">
+                        <li th:each="step : ${treeResult.connectionPath}">
+                            <a th:href="@{/person(personId=${step.from.id})}" th:text="${step.from.name}">Первый</a>
+                            <span th:text="${' -> ' + step.label + ' -> '}">связь</span>
+                            <a th:href="@{/person(personId=${step.to.id})}" th:text="${step.to.name}">Второй</a>
+                        </li>
+                    </ol>
+                    <p id="treeNoConnectionMessage" class="mb-0 text-secondary" th:if="${#lists.isEmpty(treeResult.connectionPath)}">
+                        Между выбранными людьми не удалось найти цепочку связей в пределах текущих данных.
+                    </p>
+                </section>
+            </div>
+
+            <div th:if="${primaryPerson == null}">
+                <p class="mb-3">Параметры дерева еще не выбраны.</p>
+                <a class="btn btn-primary" th:href="@{/generateTree}">Задать параметры</a>
+            </div>
+        </div>
+    </div>
+</main>
+<div th:replace="general :: page-footer"></div>
+</body>
+<th:block th:fragment="treeNode(node)" th:if="${node != null}">
+    <ul class="mb-2">
+        <li>
+            <a th:href="@{/person(personId=${node.person.id})}" th:text="${node.person.name}">Человек</a>
+            <span class="text-secondary"
+                  th:text="${' (' + (node.person.dateOfBirth != null ? node.person.dateOfBirth : '?') + ' - ' + (node.person.dateOfDeath != null ? node.person.dateOfDeath : '...') + ')'}">
+                (годы)
+            </span>
+            <div th:if="${!#lists.isEmpty(node.children)}" class="ms-4 mt-2">
+                <th:block th:each="child : ${node.children}">
+                    <div th:replace="~{this :: treeNode(node=${child})}"></div>
+                </th:block>
+            </div>
+        </li>
+    </ul>
+</th:block>
+<th:block th:fragment="connectionTreeNode(node)" th:if="${node != null}">
+    <ul class="mb-2">
+        <li>
+            <span th:if="${node.incomingLabel != null}" class="badge text-bg-light border me-2"
+                  th:text="${node.incomingLabel}">связь</span>
+            <a th:href="@{/person(personId=${node.person.id})}" th:text="${node.person.name}">Человек</a>
+            <span class="text-secondary"
+                  th:text="${' (' + (node.person.dateOfBirth != null ? node.person.dateOfBirth : '?') + ' - ' + (node.person.dateOfDeath != null ? node.person.dateOfDeath : '...') + ')'}">
+                (годы)
+            </span>
+            <span class="badge text-bg-primary ms-2" th:if="${node.primary}">Старт</span>
+            <span class="badge text-bg-success ms-2" th:if="${node.secondary}">Цель</span>
+            <div th:if="${!#lists.isEmpty(node.children)}" class="ms-4 mt-2">
+                <th:block th:each="child : ${node.children}">
+                    <div th:replace="~{this :: connectionTreeNode(node=${child})}"></div>
+                </th:block>
+            </div>
+        </li>
+    </ul>
+</th:block>
+</html>

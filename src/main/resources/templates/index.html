@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="general :: head('Главная страница')"></head>
+<body class="bg-light">
+<div th:replace="general :: page-header"></div>
+<main class="container py-4">
+    <div class="p-4 p-md-5 mb-4 bg-white rounded-3 shadow-sm">
+        <h1 class="display-6">Система генеалогической информации</h1>
+        <p class="lead mb-3">
+            В базе сейчас <span id="personCount" th:text="${personCount}">0</span> человек.
+        </p>
+        <p class="mb-4">Выберите сценарий работы: поиск, просмотр карточек, редактирование данных или подготовка дерева.</p>
+
+        <form class="row g-3 align-items-end mb-4" th:action="@{/persons}" method="get">
+            <div class="col-md-8">
+                <label class="form-label" for="homeSearch">Поиск человека по имени</label>
+                <input class="form-control" id="homeSearch" name="search" type="text"
+                       placeholder="Введите имя или его часть">
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-primary w-100" id="homeSearchButton" type="submit">Найти человека</button>
+            </div>
+        </form>
+
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-primary" id="allPersonsButton" th:href="@{/persons}">Список людей</a>
+            <a class="btn btn-outline-secondary" id="allPlacesButton" th:href="@{/places}">Список мест</a>
+            <a class="btn btn-success" id="addPersonButton" th:href="@{/editPerson}">Добавить человека</a>
+            <a class="btn btn-warning" id="generateTreeButton" th:href="@{/generateTree}">Создать дерево</a>
+        </div>
+    </div>
+</main>
+<div th:replace="general :: page-footer"></div>
+</body>
+</html>

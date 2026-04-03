@@ -37,6 +37,7 @@ dependencies {
 	testImplementation 'org.springframework:spring-test:5.3.31'
 	testImplementation 'org.testng:testng:7.10.2'
 	testImplementation 'org.mockito:mockito-inline:4.11.0'
+	testImplementation 'org.seleniumhq.selenium:selenium-java:4.21.0'
 }
 
 tasks.named('test') {

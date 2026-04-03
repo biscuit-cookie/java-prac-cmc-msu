@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="general :: head('Информация о человеке')"></head>
+<body class="bg-light">
+<div th:replace="general :: page-header"></div>
+<main class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h2 mb-0">Карточка человека</h1>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-primary" id="editPersonLink" th:href="@{/editPerson(personId=${person.id})}">Редактировать</a>
+            <a class="btn btn-outline-warning" id="personTreeLink" th:href="@{/tree(primaryPersonId=${person.id})}">Построить дерево</a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <section class="card shadow-sm" id="personInfo">
+                <div class="card-body">
+                    <h2 class="h4 mb-3" th:text="${person.name}">Имя</h2>
+                    <p><strong>Пол:</strong> <span th:text="${person.gender}">Пол</span></p>
+                    <p><strong>Год рождения:</strong> <span th:text="${person.dateOfBirth != null ? person.dateOfBirth : 'не указан'}">не указан</span></p>
+                    <p><strong>Год смерти:</strong> <span th:text="${person.dateOfDeath != null ? person.dateOfDeath : 'не указан'}">не указан</span></p>
+                    <p><strong>Характеристика:</strong>
+                        <span th:text="${person.characteristics != null ? person.characteristics : 'нет описания'}">нет описания</span>
+                    </p>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-lg-6">
+            <section class="card shadow-sm mb-4" id="personPlaces">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h4 mb-0">Связанные места</h2>
+                        <a class="btn btn-sm btn-success" id="addPersonPlaceLink"
+                           th:href="@{/editPersonPlace(personId=${person.id})}">Добавить место</a>
+                    </div>
+                    <ul class="mb-0" th:if="${!#lists.isEmpty(personPlacesForView)}">
+                        <li th:each="personPlace : ${personPlacesForView}">
+                            <a th:href="@{/place(placeId=${personPlace.place.id})}"
+                               th:id="${'personPlaceLink-' + personPlace.placeId}"
+                               th:text="${personPlace.place.name}">Место</a>
+                            <a class="btn btn-sm btn-outline-primary ms-2"
+                               th:id="${'editPersonPlaceLink-' + personPlace.placeId}"
+                               th:href="@{/editPersonPlace(personId=${person.id}, placeId=${personPlace.placeId})}">Редактировать</a>
+                            <form class="d-inline" th:id="${'removePersonPlaceForm-' + personPlace.placeId}" th:action="@{/removePersonPlace}" method="post">
+                                <input type="hidden" name="personId" th:value="${person.id}">
+                                <input type="hidden" name="placeId" th:value="${personPlace.placeId}">
+                                <button class="btn btn-sm btn-outline-danger" th:id="${'removePersonPlaceButton-' + personPlace.placeId}" type="submit">Удалить</button>
+                            </form>
+                        </li>
+                    </ul>
+                    <p class="mb-0 text-secondary" th:if="${#lists.isEmpty(personPlacesForView)}">Для человека пока не указаны места.</p>
+                </div>
+            </section>
+
+            <section class="card shadow-sm" id="personRelations">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h4 mb-0">Родственные связи</h2>
+                        <a class="btn btn-sm btn-success" id="addRelationLink"
+                           th:href="@{/editRelation(personId=${person.id})}">Добавить связь</a>
+                    </div>
+                    <ul class="mb-0" th:if="${!#lists.isEmpty(relationsForView)}">
+                        <li th:each="relation : ${relationsForView}">
+                            <span th:id="${'relationLabel-' + relation.getId()}" th:text="${relation.label}">Тип связи</span>
+                            :
+                            <a th:href="@{/person(personId=${relation.person.id})}"
+                               th:id="${'relationPersonLink-' + relation.getId()}"
+                               th:text="${relation.person.name}">Человек</a>
+                            <span class="text-secondary"
+                                  th:if="${relation.beginYear != null || relation.endYear != null}">
+                                (
+                                <span th:text="${relation.beginYear != null ? relation.beginYear : '?'}">?</span>
+                                -
+                                <span th:text="${relation.endYear != null ? relation.endYear : '...'}">...</span>
+                                )
+                            </span>
+                            <a class="btn btn-sm btn-outline-primary ms-2"
+                               th:id="${'editRelationLink-' + relation.getId()}"
+                               th:href="@{/editRelation(personId=${person.id}, relationId=${relation.getId()})}">Редактировать</a>
+                            <form class="d-inline" th:id="${'removeRelationForm-' + relation.getId()}" th:action="@{/removeRelation}" method="post">
+                                <input type="hidden" name="personId" th:value="${person.id}">
+                                <input type="hidden" name="relationId" th:value="${relation.getId()}">
+                                <button class="btn btn-sm btn-outline-danger" th:id="${'removeRelationButton-' + relation.getId()}" type="submit">Удалить</button>
+                            </form>
+                        </li>
+                    </ul>
+                    <p class="mb-0 text-secondary" th:if="${#lists.isEmpty(relationsForView)}">Для человека пока не указаны связи.</p>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <form class="mt-4" th:action="@{/removePerson}" method="post">
+        <input type="hidden" name="personId" th:value="${person.id}">
+        <button class="btn btn-danger" id="removePersonButton" type="submit">Удалить человека</button>
+    </form>
+</main>
+<div th:replace="general :: page-footer"></div>
+</body>
+</html>

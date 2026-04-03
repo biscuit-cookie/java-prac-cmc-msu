@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="general :: head(${personPlaceForm.originalPlaceId} != null ? 'Редактировать место человека' : 'Добавить место человеку')"></head>
+<body class="bg-light">
+<div th:replace="general :: page-header"></div>
+<main class="container py-4">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h1 class="h2 mb-4" th:text="${personPlaceForm.originalPlaceId} != null ? 'Редактирование места человека' : 'Добавление места человеку'">Форма места человека</h1>
+                <p class="text-secondary">
+                    Текущий человек:
+                    <strong th:text="${person.name}">Имя</strong>
+                </p>
+
+                <form th:action="@{/savePersonPlace}" method="post">
+                    <input type="hidden" name="personId" th:value="${person.id}">
+                    <input type="hidden" name="originalPlaceId" th:value="${personPlaceForm.originalPlaceId}">
+
+                    <div class="mb-3">
+                        <label class="form-label" for="personPlaceId">Место</label>
+                        <select class="form-select" id="personPlaceId" name="placeId" required>
+                            <option value="">Выберите место</option>
+                            <option th:each="place : ${availablePlaces}"
+                                    th:selected="${personPlaceForm.placeId == place.id}"
+                                    th:value="${place.id}"
+                                    th:text="${place.name}">Место</option>
+                        </select>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button class="btn btn-primary" id="savePersonPlaceButton" type="submit">Сохранить место</button>
+                        <a class="btn btn-outline-secondary" th:href="@{/person(personId=${person.id})}">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+<div th:replace="general :: page-footer"></div>
+</body>
+</html>

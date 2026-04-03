@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="general :: head('Информация о месте')"></head>
+<body class="bg-light">
+<div th:replace="general :: page-header"></div>
+<main class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h2 mb-0">Карточка места</h1>
+        <a class="btn btn-outline-primary" id="editPlaceLink" th:href="@{/editPlace(placeId=${place.id})}">Редактировать</a>
+    </div>
+
+    <section class="card shadow-sm mb-4" id="placeInfo">
+        <div class="card-body">
+            <h2 class="h4 mb-3" th:text="${place.name}">Название места</h2>
+            <p><strong>Описание:</strong> <span th:text="${place.description}">Описание</span></p>
+        </div>
+    </section>
+
+    <section class="card shadow-sm">
+        <div class="card-body">
+            <h2 class="h4">Люди, связанные с этим местом</h2>
+            <ul class="mb-0" th:if="${!#lists.isEmpty(residents)}">
+                <li th:each="resident : ${residents}">
+                    <a th:href="@{/person(personId=${resident.person.id})}" th:text="${resident.person.name}">Человек</a>
+                </li>
+            </ul>
+            <p class="mb-0 text-secondary" th:if="${#lists.isEmpty(residents)}">Для этого места пока не указаны люди.</p>
+        </div>
+    </section>
+
+    <form class="mt-4" th:action="@{/removePlace}" method="post">
+        <input type="hidden" name="placeId" th:value="${place.id}">
+        <button class="btn btn-danger" id="removePlaceButton" type="submit">Удалить место</button>
+    </form>
+</main>
+<div th:replace="general :: page-footer"></div>
+</body>
+</html>

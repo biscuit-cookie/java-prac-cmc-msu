@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="general :: head(${relationForm.relationId} != null ? 'Редактировать связь' : 'Добавить связь')"></head>
+<body class="bg-light">
+<div th:replace="general :: page-header"></div>
+<main class="container py-4">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h1 class="h2 mb-4" th:text="${relationForm.relationId} != null ? 'Редактирование связи' : 'Добавление связи'">Форма связи</h1>
+                <p class="text-secondary">
+                    Текущий человек:
+                    <strong th:text="${person.name}">Имя</strong>
+                </p>
+
+                <form th:action="@{/saveRelation}" method="post">
+                    <input type="hidden" name="personId" th:value="${person.id}">
+                    <input type="hidden" name="relationId" th:value="${relationForm.relationId}">
+
+                    <div class="mb-3">
+                        <label class="form-label" for="relatedPersonId">Связанный человек</label>
+                        <select class="form-select" id="relatedPersonId" name="relatedPersonId" required>
+                            <option value="">Выберите человека</option>
+                            <option th:each="candidate : ${availablePeople}"
+                                    th:selected="${relationForm.relatedPersonId == candidate.id}"
+                                    th:value="${candidate.id}"
+                                    th:text="${candidate.name}">Человек</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="relationKind">Тип связи относительно текущего человека</label>
+                        <select class="form-select" id="relationKind" name="relationKind" required>
+                            <option value="">Выберите тип связи</option>
+                            <option th:each="kind : ${relationKinds}"
+                                    th:selected="${relationForm.relationKind == kind.code}"
+                                    th:value="${kind.code}"
+                                    th:text="${kind.label}">Тип связи</option>
+                        </select>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="beginYear">Год начала связи</label>
+                            <input class="form-control" id="beginYear" name="beginYear" type="number"
+                                   th:value="${relationForm.beginYear}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="endYear">Год окончания связи</label>
+                            <input class="form-control" id="endYear" name="endYear" type="number"
+                                   th:value="${relationForm.endYear}">
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button class="btn btn-primary" id="saveRelationButton" type="submit">Сохранить связь</button>
+                        <a class="btn btn-outline-secondary" th:href="@{/person(personId=${person.id})}">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+<div th:replace="general :: page-footer"></div>
+</body>
+</html>

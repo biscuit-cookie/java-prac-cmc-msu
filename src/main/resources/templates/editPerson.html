@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="general :: head(${person.id} != null ? 'Редактировать человека' : 'Добавить человека')"></head>
+<body class="bg-light">
+<div th:replace="general :: page-header"></div>
+<main class="container py-4">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h1 class="h2 mb-4" th:text="${person.id} != null ? 'Редактирование человека' : 'Добавление человека'">Форма человека</h1>
+                <form th:action="@{/savePerson}" method="post">
+                    <input type="hidden" name="personId" th:value="${person.id}">
+
+                    <div class="mb-3">
+                        <label class="form-label" for="personName">Имя</label>
+                        <input class="form-control" id="personName" name="name" type="text" th:value="${person.name}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="personGender">Пол</label>
+                        <select class="form-select" id="personGender" name="gender" required>
+                            <option value="">Выберите пол</option>
+                            <option th:selected="${person.gender == 'Мужской'}" value="Мужской">Мужской</option>
+                            <option th:selected="${person.gender == 'Женский'}" value="Женский">Женский</option>
+                        </select>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="birthYear">Год рождения</label>
+                            <input class="form-control" id="birthYear" name="birthYear" type="number" th:value="${person.dateOfBirth}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="deathYear">Год смерти</label>
+                            <input class="form-control" id="deathYear" name="deathYear" type="number" th:value="${person.dateOfDeath}">
+                        </div>
+                    </div>
+
+                    <div class="mt-3 mb-4">
+                        <label class="form-label" for="characteristics">Краткая характеристика</label>
+                        <textarea class="form-control" id="characteristics" name="characteristics" rows="4"
+                                  th:text="${person.characteristics}"></textarea>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary" id="savePersonButton" type="submit">Сохранить</button>
+                        <a class="btn btn-outline-secondary" th:href="${person.id} != null ? @{/person(personId=${person.id})} : @{/persons}">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+<div th:replace="general :: page-footer"></div>
+</body>
+</html>
