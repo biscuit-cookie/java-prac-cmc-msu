@@ -17,7 +17,7 @@
 
             <div th:if="${primaryPerson != null}" class="mt-4">
                 <section class="mb-4" th:if="${!#lists.isEmpty(treeResult.partners)}">
-                    <h2 class="h4">Супруги и партнеры</h2>
+                    <h2 class="h4">Супруги</h2>
                     <ul class="mb-0">
                         <li th:each="partner : ${treeResult.partners}">
                             <a th:href="@{/person(personId=${partner.person.id})}" th:text="${partner.person.name}">Человек</a>
@@ -66,6 +66,13 @@
                         Между выбранными людьми не удалось найти цепочку связей в пределах текущих данных.
                     </p>
                 </section>
+
+                <div class="d-flex justify-content-beginning mt-4">
+                    <a class="btn btn-outline-primary btn-sm"
+                       th:href="@{/tree/download(primaryPersonId=${primaryPerson.id}, secondaryPersonId=${secondaryPerson != null ? secondaryPerson.id : null}, direction=${direction}, depth=${depth})}">
+                        Скачать дерево в JSON
+                    </a>
+                </div>
             </div>
 
             <div th:if="${primaryPerson == null}">

@@ -392,7 +392,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
         driver.get(baseUrl() + "/place?placeId=5");
         assertEquals(driver.getTitle(), "Информация о месте");
 
-        driver.findElement(By.id("removePlaceButton")).click();
+        submitContainingForm(driver.findElement(By.id("removePlaceButton")));
         assertEquals(driver.getTitle(), "Места");
         assertFalse(driver.findElement(By.id("placesList")).getText().contains("Новосибирск"));
     }
@@ -734,6 +734,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
         driver.findElement(By.id("deathYear")).sendKeys("1990");
         submitContainingForm(driver.findElement(By.id("savePersonButton")));
 
+        waitForTitle("Ошибка");
         assertEquals(driver.getTitle(), "Ошибка");
         assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
                 .contains("Год рождения не может быть больше года смерти."));
@@ -876,5 +877,20 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     private void submitContainingForm(WebElement elementInsideForm) {
         ((JavascriptExecutor) driver).executeScript("arguments[0].closest('form').submit();", elementInsideForm);
+    }
+
+    private void waitForTitle(String expectedTitle) {
+        long deadline = System.currentTimeMillis() + 3000;
+        while (System.currentTimeMillis() < deadline) {
+            if (expectedTitle.equals(driver.getTitle())) {
+                return;
+            }
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
     }
 }

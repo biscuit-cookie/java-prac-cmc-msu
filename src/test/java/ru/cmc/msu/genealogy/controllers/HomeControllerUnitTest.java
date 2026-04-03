@@ -9,10 +9,12 @@ import ru.cmc.msu.genealogy.services.GenealogyTreeService;
 import java.util.Collections;
 import java.util.List;
 
+import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertSame;
+import static org.testng.Assert.assertTrue;
 
 public class HomeControllerUnitTest {
 
@@ -96,5 +98,48 @@ public class HomeControllerUnitTest {
 
         assertEquals(controller.tree(null, null, "ancestors", null, model), "error");
         assertEquals(model.getAttribute("errorMessage"), "Глубина дерева должна быть числом от 1 до 10.");
+    }
+
+    @Test
+    public void downloadTreeReturnsJsonAttachmentForValidRequest() {
+        PersonDAO personDAO = mock(PersonDAO.class);
+        GenealogyTreeService genealogyTreeService = mock(GenealogyTreeService.class);
+        HomeController controller = new HomeController(personDAO, genealogyTreeService);
+
+        Person primary = new Person(1L, "Игорь", "Мужской", 1900, null, "desc");
+        GenealogyTreeService.TreeResult result = new GenealogyTreeService.TreeResult(
+                primary, null, GenealogyTreeService.Direction.ANCESTORS, 2,
+                null, null, List.of(), List.of(), null
+        );
+
+        when(personDAO.getById(1L)).thenReturn(primary);
+        when(genealogyTreeService.buildTree(primary, null, "ancestors", 2)).thenReturn(result);
+
+        var response = controller.downloadTree(1L, null, "ancestors", 2);
+        assertEquals(response.getStatusCodeValue(), 200);
+        assertEquals(response.getBody(), result);
+        assertTrue(response.getHeaders().getFirst(CONTENT_DISPOSITION).contains("genealogy-tree-person-1.json"));
+    }
+
+    @Test
+    public void downloadTreeReturnsJsonErrorForInvalidRequest() {
+        PersonDAO personDAO = mock(PersonDAO.class);
+        GenealogyTreeService genealogyTreeService = mock(GenealogyTreeService.class);
+        HomeController controller = new HomeController(personDAO, genealogyTreeService);
+
+        var response = controller.downloadTree(null, null, "ancestors", 0);
+        assertEquals(response.getStatusCodeValue(), 400);
+        assertTrue(response.getBody().toString().contains("Глубина дерева должна быть числом от 1 до 10."));
+    }
+
+    @Test
+    public void downloadTreeReturnsJsonErrorWhenPrimaryPersonIsNotChosen() {
+        PersonDAO personDAO = mock(PersonDAO.class);
+        GenealogyTreeService genealogyTreeService = mock(GenealogyTreeService.class);
+        HomeController controller = new HomeController(personDAO, genealogyTreeService);
+
+        var response = controller.downloadTree(null, null, "mixed", 2);
+        assertEquals(response.getStatusCodeValue(), 400);
+        assertTrue(response.getBody().toString().contains("основной человек не выбран"));
     }
 }
