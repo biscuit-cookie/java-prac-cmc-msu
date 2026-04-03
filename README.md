@@ -6,7 +6,7 @@
 - Локальная сборка и запуск выполнялись в окружении Gradle 8.5 и JVM 21.
 - Для приложения реализовано тестирование с помощью Selenium. Тесты покрывают как успешные, так и ошибочные сценарии. Покрытие подсчитано инструментом JaCoCo.
 
-![alt text](https://github.com/biscuit-cookie/java-prac-cmc-msu/blob/d14350def1190d94b42746bcfaf1f83ef0db1131/pictures/Java%20task%20JaCoCo%20results.png "Покрытие тестами")
+![alt text](https://github.com/biscuit-cookie/java-prac-cmc-msu/blob/84197a3e21401ab0681e62ef6ad307acf41fca96/pictures/Java%20task%20JaCoCo%20results.png "Покрытие тестами")
 ---
 Описание страниц
 ---
