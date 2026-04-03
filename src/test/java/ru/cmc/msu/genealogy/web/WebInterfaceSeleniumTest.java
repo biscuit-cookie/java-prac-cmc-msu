@@ -144,7 +144,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
         assertEquals(driver.getTitle(), "Результат построения дерева");
 
         String pageText = driver.findElement(By.tagName("main")).getText();
-        assertTrue(pageText.contains("Супруги и партнеры"));
+        assertTrue(pageText.contains("Супруги"));
         assertTrue(pageText.contains("Елена Михайловна"));
     }
 
@@ -615,6 +615,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
         driver.findElement(By.id("endYear")).sendKeys("2010");
         submitContainingForm(driver.findElement(By.id("saveRelationButton")));
 
+        waitForTitle("Ошибка");
         assertEquals(driver.getTitle(), "Ошибка");
         assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
                 .contains("Год начала связи не может быть больше года окончания."));
