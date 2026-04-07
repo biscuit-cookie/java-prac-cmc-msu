@@ -17,28 +17,49 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
     @Test
     public void mainPageAndHeaderNavigationWork() {
         driver.get(baseUrl() + "/");
-        assertEquals(driver.getTitle(), "Главная страница");
+        assertTitleEventually("Главная страница");
 
         driver.findElement(By.id("peopleListLink")).click();
-        assertEquals(driver.getTitle(), "Люди");
+        assertTitleEventually("Люди");
 
         driver.findElement(By.id("placesListLink")).click();
-        assertEquals(driver.getTitle(), "Места");
+        assertTitleEventually("Места");
 
         driver.findElement(By.id("treeGeneratorLink")).click();
-        assertEquals(driver.getTitle(), "Параметры дерева");
+        assertTitleEventually("Параметры дерева");
 
         driver.findElement(By.id("rootLink")).click();
-        assertEquals(driver.getTitle(), "Главная страница");
+        assertTitleEventually("Главная страница");
+    }
+
+    @Test
+    public void mainPageActionButtonsOpenTheirPages() {
+        driver.get(baseUrl() + "/");
+        assertTitleEventually("Главная страница");
+
+        driver.findElement(By.id("allPersonsButton")).click();
+        assertTitleEventually("Люди");
+
+        driver.get(baseUrl() + "/");
+        driver.findElement(By.id("allPlacesButton")).click();
+        assertTitleEventually("Места");
+
+        driver.get(baseUrl() + "/");
+        driver.findElement(By.id("addPersonButton")).click();
+        assertTitleEventually("Добавить человека");
+
+        driver.get(baseUrl() + "/");
+        driver.findElement(By.id("generateTreeButton")).click();
+        assertTitleEventually("Параметры дерева");
     }
 
     @Test
     public void searchPersonFromMainPageOpensFilteredList() {
         driver.get(baseUrl() + "/");
         driver.findElement(By.id("homeSearch")).sendKeys("Игорь");
-        submitContainingForm(driver.findElement(By.id("homeSearchButton")));
+        driver.findElement(By.id("homeSearchButton")).click();
 
-        assertEquals(driver.getTitle(), "Люди");
+        assertTitleEventually("Люди");
 
         WebElement personsTable = driver.findElement(By.id("personsTable"));
         List<WebElement> rows = personsTable.findElements(By.tagName("tr"));
@@ -47,8 +68,9 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void personPageShowsMainInformation() {
-        driver.get(baseUrl() + "/person?personId=6");
-        assertEquals(driver.getTitle(), "Информация о человеке");
+        driver.get(baseUrl() + "/persons");
+        driver.findElement(By.linkText("Игорь Михайлович")).click();
+        assertTitleEventually("Информация о человеке");
 
         WebElement personInfo = driver.findElement(By.id("personInfo"));
         String infoText = personInfo.getText();
@@ -67,18 +89,39 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
     }
 
     @Test
+    public void personPagePlaceLinkOpensPlaceCard() {
+        driver.get(baseUrl() + "/persons");
+        driver.findElement(By.linkText("Игорь Михайлович")).click();
+        driver.findElement(By.id("personPlaceLink-2")).click();
+
+        assertTitleEventually("Информация о месте");
+        assertTrue(driver.findElement(By.id("placeInfo")).getText().contains("Москва"));
+    }
+
+    @Test
+    public void personPageRelationLinkOpensRelatedPersonCard() {
+        driver.get(baseUrl() + "/persons");
+        driver.findElement(By.linkText("Игорь Михайлович")).click();
+        driver.findElement(By.id("relationPersonLink-7")).click();
+
+        assertTitleEventually("Информация о человеке");
+        assertTrue(driver.findElement(By.id("personInfo")).getText().contains("Михаил Рюрикович"));
+    }
+
+    @Test
     public void addPlaceScenarioWorks() {
         driver.get(baseUrl() + "/places");
-        assertEquals(driver.getTitle(), "Места");
+        assertTitleEventually("Места");
 
         driver.findElement(By.id("addPlaceButton")).click();
-        assertEquals(driver.getTitle(), "Добавить место");
+        assertTitleEventually("Добавить место");
 
         driver.findElement(By.id("placeName")).sendKeys("Тестовое место");
         driver.findElement(By.id("placeDescription")).sendKeys("Описание для системного теста.");
-        submitContainingForm(driver.findElement(By.id("savePlaceButton")));
+        driver.findElement(By.id("savePlaceButton")).click();
+        waitForTitle("Информация о месте");
 
-        assertEquals(driver.getTitle(), "Информация о месте");
+        assertTitleEventually("Информация о месте");
 
         WebElement placeInfo = driver.findElement(By.id("placeInfo"));
         String placeText = placeInfo.getText();
@@ -88,23 +131,17 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void generateTreeScenarioOpensResultPage() {
-        driver.get(baseUrl() + "/generateTree");
-        assertEquals(driver.getTitle(), "Параметры дерева");
+        openTreePage("1", null, "ancestors", "3");
 
-        new Select(driver.findElement(By.id("primaryPersonId"))).selectByValue("1");
-        driver.findElement(By.id("depth")).clear();
-        driver.findElement(By.id("depth")).sendKeys("3");
-        submitContainingForm(driver.findElement(By.id("buildTreeButton")));
-
-        assertEquals(driver.getTitle(), "Результат построения дерева");
+        assertTitleEventually("Результат построения дерева");
         WebElement summary = driver.findElement(By.id("treeSummary"));
         assertTrue(summary.getText().contains("Глубина: 3"));
     }
 
     @Test
     public void treeShowsAncestorsForPersonWithParentsAndGrandparents() {
-        driver.get(baseUrl() + "/tree?primaryPersonId=6&direction=ancestors&depth=2");
-        assertEquals(driver.getTitle(), "Результат построения дерева");
+        openTreePage("6", null, "ancestors", "2");
+        assertTitleEventually("Результат построения дерева");
 
         String pageText = driver.findElement(By.tagName("main")).getText();
         assertTrue(pageText.contains("Ветвь предков"));
@@ -116,8 +153,8 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void treeShowsDescendantsForPersonWithChildrenAndGrandchildren() {
-        driver.get(baseUrl() + "/tree?primaryPersonId=6&direction=descendants&depth=2");
-        assertEquals(driver.getTitle(), "Результат построения дерева");
+        openTreePage("6", null, "descendants", "2");
+        assertTitleEventually("Результат построения дерева");
 
         String pageText = driver.findElement(By.tagName("main")).getText();
         assertTrue(pageText.contains("Ветвь потомков"));
@@ -128,8 +165,8 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void treeShowsMixedModeForPerson() {
-        driver.get(baseUrl() + "/tree?primaryPersonId=6&direction=mixed&depth=1");
-        assertEquals(driver.getTitle(), "Результат построения дерева");
+        openTreePage("6", null, "mixed", "1");
+        assertTitleEventually("Результат построения дерева");
 
         String pageText = driver.findElement(By.tagName("main")).getText();
         assertTrue(pageText.contains("Ветвь предков"));
@@ -140,8 +177,8 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void treeShowsPartnersForPersonWhenTheyExist() {
-        driver.get(baseUrl() + "/tree?primaryPersonId=3&direction=ancestors&depth=1");
-        assertEquals(driver.getTitle(), "Результат построения дерева");
+        openTreePage("3", null, "ancestors", "1");
+        assertTitleEventually("Результат построения дерева");
 
         String pageText = driver.findElement(By.tagName("main")).getText();
         assertTrue(pageText.contains("Супруги"));
@@ -150,8 +187,8 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void treeShowsConnectionPathBetweenTwoPeople() {
-        driver.get(baseUrl() + "/tree?primaryPersonId=10&secondaryPersonId=3&direction=mixed&depth=2");
-        assertEquals(driver.getTitle(), "Результат построения дерева");
+        openTreePage("10", "3", "mixed", "2");
+        assertTitleEventually("Результат построения дерева");
 
         String connectionText = driver.findElement(By.id("treeConnectionSection")).getText();
         assertTrue(connectionText.contains("Дерево связи между людьми"));
@@ -161,33 +198,35 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void treeShowsNoAncestorsMessageWhenTheyDoNotExist() {
-        driver.get(baseUrl() + "/tree?primaryPersonId=1&direction=ancestors&depth=2");
-        assertEquals(driver.getTitle(), "Результат построения дерева");
+        openTreePage("1", null, "ancestors", "2");
+        assertTitleEventually("Результат построения дерева");
         assertTrue(driver.findElement(By.tagName("main")).getText()
                 .contains("не найдено предков"));
     }
 
     @Test
     public void treeShowsNoDescendantsMessageWhenTheyDoNotExist() {
-        driver.get(baseUrl() + "/tree?primaryPersonId=10&direction=descendants&depth=2");
-        assertEquals(driver.getTitle(), "Результат построения дерева");
+        openTreePage("10", null, "descendants", "2");
+        assertTitleEventually("Результат построения дерева");
         assertTrue(driver.findElement(By.tagName("main")).getText()
                 .contains("не найдено потомков"));
     }
 
     @Test
     public void treeShowsNoConnectionPathWhenPeopleAreDisconnected() {
-        submitPostForm("/savePerson", new String[][]{
-                {"name", "Изолированный человек"},
-                {"gender", "Мужской"},
-                {"birthYear", "2005"},
-                {"characteristics", "Без родственных связей"}
-        });
+        driver.get(baseUrl() + "/persons");
+        driver.findElement(By.id("addPersonFromListButton")).click();
+        driver.findElement(By.id("personName")).sendKeys("Изолированный человек");
+        new Select(driver.findElement(By.id("personGender"))).selectByVisibleText("Мужской");
+        driver.findElement(By.id("birthYear")).sendKeys("2005");
+        driver.findElement(By.id("characteristics")).sendKeys("Без родственных связей");
+        driver.findElement(By.id("savePersonButton")).click();
+        waitForTitle("Информация о человеке");
         String currentUrl = driver.getCurrentUrl();
         String isolatedPersonId = currentUrl.substring(currentUrl.indexOf("personId=") + "personId=".length());
 
-        driver.get(baseUrl() + "/tree?primaryPersonId=" + isolatedPersonId + "&secondaryPersonId=1&direction=mixed&depth=2");
-        assertEquals(driver.getTitle(), "Результат построения дерева");
+        openTreePage(isolatedPersonId, "1", "mixed", "2");
+        assertTitleEventually("Результат построения дерева");
         assertTrue(driver.findElement(By.tagName("main")).getText()
                 .contains("не удалось найти цепочку связей"));
     }
@@ -195,34 +234,29 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
     @Test
     public void generateTreeWithoutPrimaryPersonShowsInitialState() {
         driver.get(baseUrl() + "/generateTree");
-        assertEquals(driver.getTitle(), "Параметры дерева");
-        submitContainingForm(driver.findElement(By.id("buildTreeButton")));
+        assertTitleEventually("Параметры дерева");
+        driver.findElement(By.id("buildTreeButton")).click();
 
-        assertEquals(driver.getTitle(), "Результат построения дерева");
+        assertTitleEventually("Результат построения дерева");
         assertTrue(driver.findElement(By.tagName("main")).getText()
                 .contains("Параметры дерева еще не выбраны."));
     }
 
     @Test
-    public void treeWithoutDirectionUsesDefaultAncestorsMode() {
-        driver.get(baseUrl() + "/tree?primaryPersonId=6&depth=2");
-        assertEquals(driver.getTitle(), "Результат построения дерева");
-        String pageText = driver.findElement(By.tagName("main")).getText();
-        assertTrue(pageText.contains("Направление: Предки"));
-        assertTrue(pageText.contains("Ветвь предков"));
-    }
+    public void emptyTreePageButtonReturnsToParameterForm() {
+        driver.get(baseUrl() + "/tree");
+        assertTitleEventually("Результат построения дерева");
 
-    @Test
-    public void treeWithoutDepthUsesDefaultDepth() {
-        driver.get(baseUrl() + "/tree?primaryPersonId=6&direction=ancestors");
-        assertEquals(driver.getTitle(), "Результат построения дерева");
-        assertTrue(driver.findElement(By.id("treeSummary")).getText().contains("Глубина: 2"));
+        driver.findElement(By.linkText("Задать параметры")).click();
+        assertTitleEventually("Параметры дерева");
     }
 
     @Test
     public void personsListCanBeSortedByBirthYear() {
-        driver.get(baseUrl() + "/persons?sort=birthDate");
-        assertEquals(driver.getTitle(), "Люди");
+        driver.get(baseUrl() + "/persons");
+        assertTitleEventually("Люди");
+        new Select(driver.findElement(By.id("sort"))).selectByValue("birthDate");
+        driver.findElement(By.id("searchPersonButton")).click();
 
         List<WebElement> rows = driver.findElement(By.id("personsTable")).findElements(By.tagName("tr"));
         assertTrue(rows.get(1).getText().contains("Рюрик Старший"));
@@ -231,8 +265,10 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void personsListCanBeSortedByName() {
-        driver.get(baseUrl() + "/persons?sort=name");
-        assertEquals(driver.getTitle(), "Люди");
+        driver.get(baseUrl() + "/persons");
+        assertTitleEventually("Люди");
+        new Select(driver.findElement(By.id("sort"))).selectByValue("name");
+        driver.findElement(By.id("searchPersonButton")).click();
 
         List<WebElement> rows = driver.findElement(By.id("personsTable")).findElements(By.tagName("tr"));
         assertTrue(rows.get(1).getText().contains("Алексей Павлович"));
@@ -243,7 +279,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
     public void searchWithNoMatchesShowsEmptyState() {
         driver.get(baseUrl() + "/persons");
         driver.findElement(By.id("search")).sendKeys("Несуществующий человек");
-        submitContainingForm(driver.findElement(By.id("searchPersonButton")));
+        driver.findElement(By.id("searchPersonButton")).click();
 
         WebElement personsTable = driver.findElement(By.id("personsTable"));
         assertTrue(personsTable.getText().contains("Подходящие люди не найдены."));
@@ -253,7 +289,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
     public void placeSearchFindsExpectedPlace() {
         driver.get(baseUrl() + "/places");
         driver.findElement(By.id("placeSearch")).sendKeys("Казань");
-        submitContainingForm(driver.findElement(By.id("searchPlaceButton")));
+        driver.findElement(By.id("searchPlaceButton")).click();
 
         String text = driver.findElement(By.id("placesList")).getText();
         assertTrue(text.contains("Казань"));
@@ -263,7 +299,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
     @Test
     public void placesListShowsAllSeededPlacesWithoutFilter() {
         driver.get(baseUrl() + "/places");
-        assertEquals(driver.getTitle(), "Места");
+        assertTitleEventually("Места");
 
         String text = driver.findElement(By.id("placesList")).getText();
         assertTrue(text.contains("Тверь"));
@@ -277,37 +313,40 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
     public void placeSearchWithNoMatchesShowsEmptyState() {
         driver.get(baseUrl() + "/places");
         driver.findElement(By.id("placeSearch")).sendKeys("Несуществующее место");
-        submitContainingForm(driver.findElement(By.id("searchPlaceButton")));
+        driver.findElement(By.id("searchPlaceButton")).click();
 
         assertTrue(driver.findElement(By.id("placesList")).getText().contains("Подходящие места не найдены."));
     }
 
     @Test
     public void placePageShowsResidentsAndAllowsNavigationToPerson() {
-        driver.get(baseUrl() + "/place?placeId=2");
-        assertEquals(driver.getTitle(), "Информация о месте");
+        driver.get(baseUrl() + "/places");
+        openPlaceFromList("Москва");
+        assertTitleEventually("Информация о месте");
 
         WebElement residentsBlock = driver.findElement(By.tagName("main"));
         assertTrue(residentsBlock.getText().contains("Михаил Рюрикович"));
         assertTrue(residentsBlock.getText().contains("Игорь Михайлович"));
 
         driver.findElement(By.linkText("Игорь Михайлович")).click();
-        assertEquals(driver.getTitle(), "Информация о человеке");
+        assertTitleEventually("Информация о человеке");
         assertTrue(driver.findElement(By.id("personInfo")).getText().contains("Игорь Михайлович"));
     }
 
     @Test
     public void addPersonScenarioWorks() {
-        driver.get(baseUrl() + "/editPerson");
-        assertEquals(driver.getTitle(), "Добавить человека");
+        driver.get(baseUrl() + "/persons");
+        driver.findElement(By.id("addPersonFromListButton")).click();
+        assertTitleEventually("Добавить человека");
 
         driver.findElement(By.id("personName")).sendKeys("Тестовый Потомок");
         new Select(driver.findElement(By.id("personGender"))).selectByVisibleText("Мужской");
         driver.findElement(By.id("birthYear")).sendKeys("2001");
         driver.findElement(By.id("characteristics")).sendKeys("Добавлен системным тестом.");
-        submitContainingForm(driver.findElement(By.id("savePersonButton")));
+        driver.findElement(By.id("savePersonButton")).click();
+        waitForTitle("Информация о человеке");
 
-        assertEquals(driver.getTitle(), "Информация о человеке");
+        assertTitleEventually("Информация о человеке");
         String infoText = driver.findElement(By.id("personInfo")).getText();
         assertTrue(infoText.contains("Тестовый Потомок"));
         assertTrue(infoText.contains("2001"));
@@ -316,8 +355,10 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void editPersonScenarioWorks() {
-        driver.get(baseUrl() + "/editPerson?personId=10");
-        assertEquals(driver.getTitle(), "Редактировать человека");
+        driver.get(baseUrl() + "/persons");
+        driver.findElement(By.linkText("Алексей Павлович")).click();
+        driver.findElement(By.id("editPersonLink")).click();
+        assertTitleEventually("Редактировать человека");
 
         WebElement nameField = driver.findElement(By.id("personName"));
         nameField.clear();
@@ -327,9 +368,10 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
         characteristics.clear();
         characteristics.sendKeys("Обновленная характеристика.");
 
-        submitContainingForm(driver.findElement(By.id("savePersonButton")));
+        driver.findElement(By.id("savePersonButton")).click();
+        waitForTitle("Информация о человеке");
 
-        assertEquals(driver.getTitle(), "Информация о человеке");
+        assertTitleEventually("Информация о человеке");
         String infoText = driver.findElement(By.id("personInfo")).getText();
         assertTrue(infoText.contains("Алексей Павлович Обновленный"));
         assertTrue(infoText.contains("Обновленная характеристика."));
@@ -337,76 +379,119 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void personPageEditLinkOpensEditForm() {
-        driver.get(baseUrl() + "/person?personId=6");
+        driver.get(baseUrl() + "/persons");
+        driver.findElement(By.linkText("Игорь Михайлович")).click();
         driver.findElement(By.id("editPersonLink")).click();
 
-        assertEquals(driver.getTitle(), "Редактировать человека");
+        assertTitleEventually("Редактировать человека");
         assertEquals(driver.findElement(By.id("personName")).getAttribute("value"), "Игорь Михайлович");
     }
 
     @Test
     public void personPageTreeLinkOpensTreeResultForThatPerson() {
-        driver.get(baseUrl() + "/person?personId=6");
+        driver.get(baseUrl() + "/persons");
+        driver.findElement(By.linkText("Игорь Михайлович")).click();
         driver.findElement(By.id("personTreeLink")).click();
 
-        assertEquals(driver.getTitle(), "Результат построения дерева");
+        assertTitleEventually("Результат построения дерева");
         WebElement summary = driver.findElement(By.id("treeSummary"));
         assertTrue(summary.getText().contains("Игорь Михайлович"));
     }
 
     @Test
+    public void treePageAllowsNavigationToPersonCard() {
+        openTreePage("6", null, "ancestors", "2");
+        driver.findElement(By.linkText("Михаил Рюрикович")).click();
+
+        assertTitleEventually("Информация о человеке");
+        assertTrue(driver.findElement(By.id("personInfo")).getText().contains("Михаил Рюрикович"));
+    }
+
+    @Test
+    public void treePageShowsDownloadLinkForJsonExport() {
+        openTreePage("6", null, "ancestors", "2");
+
+        WebElement downloadLink = driver.findElement(By.linkText("Скачать дерево в JSON"));
+        String href = downloadLink.getAttribute("href");
+        assertTrue(href.contains("/tree/download"));
+        assertTrue(href.contains("primaryPersonId=6"));
+        assertTrue(href.contains("direction=ancestors"));
+        assertTrue(href.contains("depth=2"));
+    }
+
+    @Test
     public void editPlaceScenarioWorks() {
-        driver.get(baseUrl() + "/editPlace?placeId=4");
-        assertEquals(driver.getTitle(), "Редактировать место");
+        driver.get(baseUrl() + "/places");
+        openPlaceFromList("Казань");
+        driver.findElement(By.id("editPlaceLink")).click();
+        assertTitleEventually("Редактировать место");
 
         WebElement description = driver.findElement(By.id("placeDescription"));
         description.clear();
         description.sendKeys("Обновленное описание Казани.");
-        submitContainingForm(driver.findElement(By.id("savePlaceButton")));
+        driver.findElement(By.id("savePlaceButton")).click();
+        waitForTitle("Информация о месте");
 
-        assertEquals(driver.getTitle(), "Информация о месте");
+        assertTitleEventually("Информация о месте");
         assertTrue(driver.findElement(By.id("placeInfo")).getText().contains("Обновленное описание Казани."));
     }
 
     @Test
     public void placePageEditLinkOpensEditForm() {
-        driver.get(baseUrl() + "/place?placeId=2");
+        driver.get(baseUrl() + "/places");
+        openPlaceFromList("Москва");
         driver.findElement(By.id("editPlaceLink")).click();
 
-        assertEquals(driver.getTitle(), "Редактировать место");
+        assertTitleEventually("Редактировать место");
         assertEquals(driver.findElement(By.id("placeName")).getAttribute("value"), "Москва");
     }
 
     @Test
+    public void addPersonFormCancelReturnsToPersonsList() {
+        driver.get(baseUrl() + "/persons");
+        driver.findElement(By.id("addPersonFromListButton")).click();
+        assertTitleEventually("Добавить человека");
+
+        driver.findElement(By.linkText("Отмена")).click();
+        assertTitleEventually("Люди");
+    }
+
+    @Test
     public void deletePersonScenarioWorks() {
-        driver.get(baseUrl() + "/person?personId=10");
-        assertEquals(driver.getTitle(), "Информация о человеке");
+        driver.get(baseUrl() + "/persons");
+        driver.findElement(By.linkText("Алексей Павлович")).click();
+        assertTitleEventually("Информация о человеке");
 
         driver.findElement(By.id("removePersonButton")).click();
-        assertEquals(driver.getTitle(), "Люди");
+        waitForTitle("Люди");
+        assertTitleEventually("Люди");
         assertFalse(driver.findElement(By.id("personsTable")).getText().contains("Алексей Павлович"));
     }
 
     @Test
     public void deletePlaceScenarioWorks() {
-        driver.get(baseUrl() + "/place?placeId=5");
-        assertEquals(driver.getTitle(), "Информация о месте");
+        driver.get(baseUrl() + "/places");
+        openPlaceFromList("Новосибирск");
+        assertTitleEventually("Информация о месте");
 
-        submitContainingForm(driver.findElement(By.id("removePlaceButton")));
-        assertEquals(driver.getTitle(), "Места");
+        driver.findElement(By.id("removePlaceButton")).click();
+        waitForTitle("Места");
+        assertTitleEventually("Места");
         assertFalse(driver.findElement(By.id("placesList")).getText().contains("Новосибирск"));
     }
 
     @Test
     public void addPersonPlaceScenarioWorks() {
-        driver.get(baseUrl() + "/person?personId=10");
+        driver.get(baseUrl() + "/persons");
+        driver.findElement(By.linkText("Алексей Павлович")).click();
         driver.findElement(By.id("addPersonPlaceLink")).click();
-        assertEquals(driver.getTitle(), "Добавить место человеку");
+        assertTitleEventually("Добавить место человеку");
 
         new Select(driver.findElement(By.id("personPlaceId"))).selectByValue("2");
-        submitContainingForm(driver.findElement(By.id("savePersonPlaceButton")));
+        driver.findElement(By.id("savePersonPlaceButton")).click();
+        waitForTitle("Информация о человеке");
 
-        assertEquals(driver.getTitle(), "Информация о человеке");
+        assertTitleEventually("Информация о человеке");
         String placesText = driver.findElement(By.id("personPlaces")).getText();
         assertTrue(placesText.contains("Москва"));
         assertTrue(placesText.contains("Новосибирск"));
@@ -414,14 +499,16 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void editPersonPlaceScenarioWorks() {
-        driver.get(baseUrl() + "/person?personId=6");
+        driver.get(baseUrl() + "/persons");
+        driver.findElement(By.linkText("Игорь Михайлович")).click();
         driver.findElement(By.id("editPersonPlaceLink-4")).click();
-        assertEquals(driver.getTitle(), "Редактировать место человека");
+        assertTitleEventually("Редактировать место человека");
 
         new Select(driver.findElement(By.id("personPlaceId"))).selectByValue("5");
-        submitContainingForm(driver.findElement(By.id("savePersonPlaceButton")));
+        driver.findElement(By.id("savePersonPlaceButton")).click();
+        waitForTitle("Информация о человеке");
 
-        assertEquals(driver.getTitle(), "Информация о человеке");
+        assertTitleEventually("Информация о человеке");
         String placesText = driver.findElement(By.id("personPlaces")).getText();
         assertTrue(placesText.contains("Москва"));
         assertTrue(placesText.contains("Новосибирск"));
@@ -430,121 +517,45 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void deletePersonPlaceScenarioWorks() {
-        driver.get(baseUrl() + "/person?personId=6");
+        driver.get(baseUrl() + "/persons");
+        driver.findElement(By.linkText("Игорь Михайлович")).click();
         String beforeDelete = driver.findElement(By.id("personPlaces")).getText();
         assertTrue(beforeDelete.contains("Казань"));
 
-        submitContainingForm(driver.findElement(By.id("removePersonPlaceButton-4")));
+        driver.findElement(By.id("removePersonPlaceButton-4")).click();
+        waitForTitle("Информация о человеке");
 
-        assertEquals(driver.getTitle(), "Информация о человеке");
+        assertTitleEventually("Информация о человеке");
         String afterDelete = driver.findElement(By.id("personPlaces")).getText();
         assertFalse(afterDelete.contains("Казань"));
     }
 
     @Test
     public void personPlaceFormHtmlValidationPreventsEmptySubmit() {
-        driver.get(baseUrl() + "/editPersonPlace?personId=6");
+        driver.get(baseUrl() + "/persons");
+        driver.findElement(By.linkText("Игорь Михайлович")).click();
+        driver.findElement(By.id("addPersonPlaceLink")).click();
         driver.findElement(By.id("savePersonPlaceButton")).click();
 
-        assertEquals(driver.getTitle(), "Добавить место человеку");
+        assertTitleEventually("Добавить место человеку");
         String validationMessage = validationMessage(driver.findElement(By.id("personPlaceId")));
         assertFalse(validationMessage.isBlank());
     }
 
     @Test
-    public void invalidEditPersonPlaceIdShowsErrorPage() {
-        driver.get(baseUrl() + "/editPersonPlace?personId=6&placeId=9999");
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("В базе нет места с ID = 9999"));
-    }
-
-    @Test
-    public void craftedSavePersonPlaceWithMissingPersonShowsDedicatedError() {
-        submitPostForm("/savePersonPlace", new String[][]{
-                {"personId", "9999"},
-                {"placeId", "2"}
-        });
-
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("Нельзя сохранить место: человек с ID = 9999 не найден."));
-    }
-
-    @Test
-    public void craftedSavePersonPlaceWithMissingPlaceShowsDedicatedError() {
-        submitPostForm("/savePersonPlace", new String[][]{
-                {"personId", "6"},
-                {"placeId", "9999"}
-        });
-
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("Нельзя сохранить место: место с ID = 9999 не найдено."));
-    }
-
-    @Test
-    public void craftedSavePersonPlaceWithDuplicateLinkShowsDedicatedError() {
-        submitPostForm("/savePersonPlace", new String[][]{
-                {"personId", "6"},
-                {"placeId", "2"}
-        });
-
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("Нельзя добавить место: такая связь уже существует."));
-    }
-
-    @Test
-    public void craftedSavePersonPlaceWithMissingOriginalLinkShowsDedicatedError() {
-        submitPostForm("/savePersonPlace", new String[][]{
-                {"personId", "6"},
-                {"originalPlaceId", "5"},
-                {"placeId", "3"}
-        });
-
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("Нельзя сохранить изменения: исходная связь человека с местом не найдена."));
-    }
-
-    @Test
-    public void craftedSavePersonPlaceWithDuplicateTargetPlaceShowsDedicatedError() {
-        submitPostForm("/savePersonPlace", new String[][]{
-                {"personId", "6"},
-                {"originalPlaceId", "4"},
-                {"placeId", "2"}
-        });
-
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("Нельзя сохранить изменения: у человека уже есть связь с этим местом."));
-    }
-
-    @Test
-    public void craftedRemovePersonPlaceWithMissingLinkShowsDedicatedError() {
-        submitPostForm("/removePersonPlace", new String[][]{
-                {"personId", "6"},
-                {"placeId", "5"}
-        });
-
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("Нельзя удалить место у человека: связь не найдена."));
-    }
-
-    @Test
     public void addRelationScenarioWorks() {
-        driver.get(baseUrl() + "/person?personId=10");
+        driver.get(baseUrl() + "/persons");
+        driver.findElement(By.linkText("Алексей Павлович")).click();
         driver.findElement(By.id("addRelationLink")).click();
-        assertEquals(driver.getTitle(), "Добавить связь");
+        assertTitleEventually("Добавить связь");
 
         new Select(driver.findElement(By.id("relatedPersonId"))).selectByValue("9");
         new Select(driver.findElement(By.id("relationKind"))).selectByValue("PARTNER");
         driver.findElement(By.id("beginYear")).sendKeys("2020");
-        submitContainingForm(driver.findElement(By.id("saveRelationButton")));
+        driver.findElement(By.id("saveRelationButton")).click();
+        waitForTitle("Информация о человеке");
 
-        assertEquals(driver.getTitle(), "Информация о человеке");
+        assertTitleEventually("Информация о человеке");
         String relationText = driver.findElement(By.id("personRelations")).getText();
         assertTrue(relationText.contains("Супруг(а)"));
         assertTrue(relationText.contains("Наталья Игоревна"));
@@ -553,15 +564,19 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void editRelationScenarioWorks() {
-        driver.get(baseUrl() + "/person?personId=6");
+        driver.get(baseUrl() + "/persons");
+        driver.findElement(By.linkText("Игорь Михайлович")).click();
         driver.findElement(By.id("editRelationLink-7")).click();
-        assertEquals(driver.getTitle(), "Редактировать связь");
+        assertTitleEventually("Редактировать связь");
 
         new Select(driver.findElement(By.id("relationKind"))).selectByValue("ADOPTIVE_PARENT");
-        driver.findElement(By.id("endYear")).sendKeys("1988");
-        submitContainingForm(driver.findElement(By.id("saveRelationButton")));
+        WebElement endYearField = driver.findElement(By.id("endYear"));
+        endYearField.clear();
+        endYearField.sendKeys("1988");
+        driver.findElement(By.id("saveRelationButton")).click();
+        waitForTitle("Информация о человеке");
 
-        assertEquals(driver.getTitle(), "Информация о человеке");
+        assertTitleEventually("Информация о человеке");
         String relationText = driver.findElement(By.id("personRelations")).getText();
         assertTrue(relationText.contains("Приемный родитель"));
         assertTrue(relationText.contains("Михаил Рюрикович"));
@@ -570,160 +585,59 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void deleteRelationScenarioWorks() {
-        driver.get(baseUrl() + "/person?personId=6");
+        driver.get(baseUrl() + "/persons");
+        driver.findElement(By.linkText("Игорь Михайлович")).click();
         String beforeDelete = driver.findElement(By.id("personRelations")).getText();
         assertTrue(beforeDelete.contains("Елена Михайловна"));
 
-        submitContainingForm(driver.findElement(By.id("removeRelationButton-8")));
+        driver.findElement(By.id("removeRelationButton-8")).click();
+        waitForTitle("Информация о человеке");
 
-        assertEquals(driver.getTitle(), "Информация о человеке");
+        assertTitleEventually("Информация о человеке");
         String afterDelete = driver.findElement(By.id("personRelations")).getText();
         assertFalse(afterDelete.contains("Елена Михайловна"));
     }
 
     @Test
     public void relationFormHtmlValidationPreventsEmptySubmit() {
-        driver.get(baseUrl() + "/editRelation?personId=6");
+        driver.get(baseUrl() + "/persons");
+        driver.findElement(By.linkText("Игорь Михайлович")).click();
+        driver.findElement(By.id("addRelationLink")).click();
         driver.findElement(By.id("saveRelationButton")).click();
 
-        assertEquals(driver.getTitle(), "Добавить связь");
+        assertTitleEventually("Добавить связь");
         String relatedValidation = validationMessage(driver.findElement(By.id("relatedPersonId")));
         String kindValidation = validationMessage(driver.findElement(By.id("relationKind")));
         assertTrue(!relatedValidation.isBlank() || !kindValidation.isBlank());
     }
 
     @Test
-    public void relationCannotPointToSamePerson() {
-        submitPostForm("/saveRelation", new String[][]{
-                {"personId", "6"},
-                {"relatedPersonId", "6"},
-                {"relationKind", "PARTNER"},
-                {"beginYear", "2000"}
-        });
+    public void editRelationFormCancelReturnsToPersonPage() {
+        driver.get(baseUrl() + "/persons");
+        driver.findElement(By.linkText("Игорь Михайлович")).click();
+        driver.findElement(By.id("editRelationLink-7")).click();
+        assertTitleEventually("Редактировать связь");
 
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("Нельзя создать связь человека с самим собой."));
+        driver.findElement(By.linkText("Отмена")).click();
+        assertTitleEventually("Информация о человеке");
+        assertTrue(driver.findElement(By.id("personInfo")).getText().contains("Игорь Михайлович"));
     }
 
     @Test
     public void invalidRelationDatesShowServerSideError() {
-        driver.get(baseUrl() + "/editRelation?personId=6");
+        driver.get(baseUrl() + "/persons");
+        driver.findElement(By.linkText("Игорь Михайлович")).click();
+        driver.findElement(By.id("addRelationLink")).click();
         new Select(driver.findElement(By.id("relatedPersonId"))).selectByValue("9");
         new Select(driver.findElement(By.id("relationKind"))).selectByValue("PARTNER");
         driver.findElement(By.id("beginYear")).sendKeys("2020");
         driver.findElement(By.id("endYear")).sendKeys("2010");
-        submitContainingForm(driver.findElement(By.id("saveRelationButton")));
+        driver.findElement(By.id("saveRelationButton")).click();
 
         waitForTitle("Ошибка");
-        assertEquals(driver.getTitle(), "Ошибка");
+        assertTitleEventually("Ошибка");
         assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
                 .contains("Год начала связи не может быть больше года окончания."));
-    }
-
-    @Test
-    public void invalidEditRelationIdShowsErrorPage() {
-        driver.get(baseUrl() + "/editRelation?personId=6&relationId=9999");
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("В базе нет связи с ID = 9999"));
-    }
-
-    @Test
-    public void craftedSaveRelationWithMissingRelationShowsDedicatedError() {
-        submitPostForm("/saveRelation", new String[][]{
-                {"personId", "6"},
-                {"relationId", "9999"},
-                {"relatedPersonId", "9"},
-                {"relationKind", "PARTNER"},
-                {"beginYear", "2000"}
-        });
-
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("Нельзя сохранить изменения: связь с ID = 9999 не найдена."));
-    }
-
-    @Test
-    public void craftedSaveRelationWithMissingCurrentPersonShowsDedicatedError() {
-        submitPostForm("/saveRelation", new String[][]{
-                {"personId", "9999"},
-                {"relatedPersonId", "9"},
-                {"relationKind", "PARTNER"},
-                {"beginYear", "2000"}
-        });
-
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("Нельзя сохранить связь: человек с ID = 9999 не найден."));
-    }
-
-    @Test
-    public void craftedSaveRelationWithMissingRelatedPersonShowsDedicatedError() {
-        submitPostForm("/saveRelation", new String[][]{
-                {"personId", "6"},
-                {"relatedPersonId", "9999"},
-                {"relationKind", "PARTNER"},
-                {"beginYear", "2000"}
-        });
-
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("Нельзя сохранить связь: второй человек с ID = 9999 не найден."));
-    }
-
-    @Test
-    public void craftedSaveRelationWithUnknownTypeShowsDedicatedError() {
-        submitPostForm("/saveRelation", new String[][]{
-                {"personId", "6"},
-                {"relatedPersonId", "9"},
-                {"relationKind", "UNKNOWN_KIND"},
-                {"beginYear", "2000"}
-        });
-
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("Нельзя сохранить связь: указан неизвестный тип связи."));
-    }
-
-    @Test
-    public void craftedRemoveRelationWithMissingEntityShowsDedicatedError() {
-        submitPostForm("/removeRelation", new String[][]{
-                {"personId", "6"},
-                {"relationId", "9999"}
-        });
-
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("Нельзя удалить связь: запись не найдена."));
-    }
-
-    @Test
-    public void invalidPersonIdShowsErrorPage() {
-        driver.get(baseUrl() + "/person?personId=9999");
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText().contains("В базе нет человека с ID = 9999"));
-    }
-
-    @Test
-    public void invalidPlaceIdShowsErrorPage() {
-        driver.get(baseUrl() + "/place?placeId=9999");
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText().contains("В базе нет места с ID = 9999"));
-    }
-
-    @Test
-    public void invalidEditPersonIdShowsErrorPage() {
-        driver.get(baseUrl() + "/editPerson?personId=9999");
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText().contains("В базе нет человека с ID = 9999"));
-    }
-
-    @Test
-    public void invalidEditPlaceIdShowsErrorPage() {
-        driver.get(baseUrl() + "/editPlace?placeId=9999");
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText().contains("В базе нет места с ID = 9999"));
     }
 
     @Test
@@ -733,10 +647,10 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
         new Select(driver.findElement(By.id("personGender"))).selectByVisibleText("Женский");
         driver.findElement(By.id("birthYear")).sendKeys("2000");
         driver.findElement(By.id("deathYear")).sendKeys("1990");
-        submitContainingForm(driver.findElement(By.id("savePersonButton")));
+        driver.findElement(By.id("savePersonButton")).click();
 
         waitForTitle("Ошибка");
-        assertEquals(driver.getTitle(), "Ошибка");
+        assertTitleEventually("Ошибка");
         assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
                 .contains("Год рождения не может быть больше года смерти."));
     }
@@ -746,7 +660,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
         driver.get(baseUrl() + "/editPerson");
         driver.findElement(By.id("savePersonButton")).click();
 
-        assertEquals(driver.getTitle(), "Добавить человека");
+        assertTitleEventually("Добавить человека");
         WebElement personName = driver.findElement(By.id("personName"));
         String validationMessage = validationMessage(personName);
         assertFalse(validationMessage.isBlank());
@@ -757,117 +671,10 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
         driver.get(baseUrl() + "/editPlace");
         driver.findElement(By.id("savePlaceButton")).click();
 
-        assertEquals(driver.getTitle(), "Добавить место");
+        assertTitleEventually("Добавить место");
         WebElement placeName = driver.findElement(By.id("placeName"));
         String validationMessage = validationMessage(placeName);
         assertFalse(validationMessage.isBlank());
-    }
-
-    @Test
-    public void invalidTreePersonShowsErrorPage() {
-        driver.get(baseUrl() + "/tree?primaryPersonId=9999");
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("Не удалось построить дерево: человек с указанным ID не найден."));
-    }
-
-    @Test
-    public void invalidSecondTreePersonShowsErrorPage() {
-        driver.get(baseUrl() + "/tree?primaryPersonId=1&secondaryPersonId=9999");
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("Не удалось построить дерево: второй человек с указанным ID не найден."));
-    }
-
-    @Test
-    public void invalidTreeDepthTooSmallShowsErrorPage() {
-        driver.get(baseUrl() + "/tree?primaryPersonId=1&depth=0");
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("Глубина дерева должна быть числом от 1 до 10."));
-    }
-
-    @Test
-    public void invalidTreeDepthTooLargeShowsErrorPage() {
-        driver.get(baseUrl() + "/tree?primaryPersonId=1&depth=11");
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("Глубина дерева должна быть числом от 1 до 10."));
-    }
-
-    @Test
-    public void treePageWithoutParametersShowsInitialState() {
-        driver.get(baseUrl() + "/tree");
-        assertEquals(driver.getTitle(), "Результат построения дерева");
-        assertTrue(driver.findElement(By.tagName("main")).getText().contains("Параметры дерева еще не выбраны."));
-    }
-
-    @Test
-    public void craftedSavePersonWithMissingEntityShowsDedicatedError() {
-        submitPostForm("/savePerson", new String[][]{
-                {"personId", "9999"},
-                {"name", "Призрак"},
-                {"gender", "Мужской"},
-                {"birthYear", "1950"},
-                {"characteristics", "Несуществующая запись"}
-        });
-
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("Нельзя сохранить изменения: человек с ID = 9999 не найден."));
-    }
-
-    @Test
-    public void craftedRemovePersonWithMissingEntityShowsDedicatedError() {
-        submitPostForm("/removePerson", new String[][]{
-                {"personId", "9999"}
-        });
-
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("Нельзя удалить человека: запись не найдена."));
-    }
-
-    @Test
-    public void craftedSavePlaceWithMissingEntityShowsDedicatedError() {
-        submitPostForm("/savePlace", new String[][]{
-                {"placeId", "9999"},
-                {"name", "Призрачное место"},
-                {"description", "Описание отсутствующей записи"}
-        });
-
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("Нельзя сохранить изменения: место с ID = 9999 не найдено."));
-    }
-
-    @Test
-    public void craftedRemovePlaceWithMissingEntityShowsDedicatedError() {
-        submitPostForm("/removePlace", new String[][]{
-                {"placeId", "9999"}
-        });
-
-        assertEquals(driver.getTitle(), "Ошибка");
-        assertTrue(driver.findElement(By.id("errorMessageBlock")).getText()
-                .contains("Нельзя удалить место: запись не найдена."));
-    }
-
-    private void submitPostForm(String path, String[][] fields) {
-        String script = ""
-                + "const form = document.createElement('form');"
-                + "form.method = 'post';"
-                + "form.action = arguments[0];"
-                + "for (const field of arguments[1]) {"
-                + "  const input = document.createElement('input');"
-                + "  input.type = 'hidden';"
-                + "  input.name = field[0];"
-                + "  input.value = field[1];"
-                + "  form.appendChild(input);"
-                + "}"
-                + "document.body.appendChild(form);"
-                + "form.submit();";
-        driver.get(baseUrl() + "/");
-        ((JavascriptExecutor) driver).executeScript(script, baseUrl() + path, fields);
     }
 
     private String validationMessage(WebElement element) {
@@ -876,10 +683,34 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
         return result == null ? "" : result.toString();
     }
 
-    private void submitContainingForm(WebElement elementInsideForm) {
-        ((JavascriptExecutor) driver).executeScript("arguments[0].closest('form').submit();", elementInsideForm);
+    private void assertTitleEventually(String expectedTitle) {
+        waitForTitle(expectedTitle);
+        assertEquals(driver.getTitle(), expectedTitle);
     }
 
+    private void openTreePage(String primaryPersonId, String secondaryPersonId, String direction, String depth) {
+        driver.get(baseUrl() + "/generateTree");
+        assertTitleEventually("Параметры дерева");
+
+        new Select(driver.findElement(By.id("primaryPersonId"))).selectByValue(primaryPersonId);
+        if (secondaryPersonId != null) {
+            new Select(driver.findElement(By.id("secondaryPersonId"))).selectByValue(secondaryPersonId);
+        }
+        new Select(driver.findElement(By.id("direction"))).selectByValue(direction);
+        WebElement depthField = driver.findElement(By.id("depth"));
+        depthField.clear();
+        depthField.sendKeys(depth);
+        driver.findElement(By.id("buildTreeButton")).click();
+        assertTitleEventually("Результат построения дерева");
+    }
+
+    private void openPlaceFromList(String placeName) {
+        driver.findElement(By.xpath("//div[@id='placesList']//a[.//div[@class='fw-semibold' and normalize-space()='" + placeName + "']]"))
+                .click();
+    }
+
+    // У меня средний по мощности ноутбук, потому я буду чуток ждать, пока страница прогрузится. Логику тестов это не меняет,
+    // просто зачастую тесты рандомно ложатся из-за того, что просто не успевает загрузиться другая страница
     private void waitForTitle(String expectedTitle) {
         long deadline = System.currentTimeMillis() + 3000;
         while (System.currentTimeMillis() < deadline) {

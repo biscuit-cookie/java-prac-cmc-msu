@@ -128,6 +128,34 @@ public class PersonControllerUnitTest {
     }
 
     @Test
+    public void personAndEditPagesReturnErrorsForMissingEntities() {
+        PersonDAO personDAO = mock(PersonDAO.class);
+        PlaceDAO placeDAO = mock(PlaceDAO.class);
+        PersonPlaceDAO personPlaceDAO = mock(PersonPlaceDAO.class);
+        RelationDAO relationDAO = mock(RelationDAO.class);
+        PersonController controller = new PersonController(personDAO, placeDAO, personPlaceDAO, relationDAO);
+
+        ExtendedModelMap missingPersonPageModel = new ExtendedModelMap();
+        assertEquals(controller.personPage(9999L, missingPersonPageModel), "error");
+        assertEquals(missingPersonPageModel.getAttribute("errorMessage"), "В базе нет человека с ID = 9999");
+
+        ExtendedModelMap missingEditPersonModel = new ExtendedModelMap();
+        assertEquals(controller.editPersonPage(9999L, missingEditPersonModel), "error");
+        assertEquals(missingEditPersonModel.getAttribute("errorMessage"), "В базе нет человека с ID = 9999");
+
+        Person existingPerson = new Person(6L, "Игорь", "Мужской", 1938, null, "desc");
+        when(personDAO.getById(6L)).thenReturn(existingPerson);
+
+        ExtendedModelMap missingEditPersonPlaceModel = new ExtendedModelMap();
+        assertEquals(controller.editPersonPlacePage(6L, 9999L, missingEditPersonPlaceModel), "error");
+        assertEquals(missingEditPersonPlaceModel.getAttribute("errorMessage"), "В базе нет места с ID = 9999");
+
+        ExtendedModelMap missingEditRelationModel = new ExtendedModelMap();
+        assertEquals(controller.editRelationPage(6L, 9999L, missingEditRelationModel), "error");
+        assertEquals(missingEditRelationModel.getAttribute("errorMessage"), "В базе нет связи с ID = 9999");
+    }
+
+    @Test
     public void savePersonRejectsBlankNameAndBlankGender() {
         PersonController controller = new PersonController(mock(PersonDAO.class), mock(PlaceDAO.class),
                 mock(PersonPlaceDAO.class), mock(RelationDAO.class));
@@ -222,6 +250,111 @@ public class PersonControllerUnitTest {
         assertEquals(controller.saveRelationPage(2L, null, 3L, "CHILD", null, 2000, model),
                 "redirect:/person?personId=2");
         verify(relationDAO).save(any(Relation.class));
+    }
+
+    @Test
+    public void craftedPersonAndPersonPlaceRequestsReturnDedicatedErrors() {
+        PersonDAO personDAO = mock(PersonDAO.class);
+        PlaceDAO placeDAO = mock(PlaceDAO.class);
+        PersonPlaceDAO personPlaceDAO = mock(PersonPlaceDAO.class);
+        RelationDAO relationDAO = mock(RelationDAO.class);
+        PersonController controller = new PersonController(personDAO, placeDAO, personPlaceDAO, relationDAO);
+
+        ExtendedModelMap missingPersonUpdateModel = new ExtendedModelMap();
+        assertEquals(controller.savePersonPage(9999L, "Призрак", "Мужской", 1950, null,
+                "Несуществующая запись", missingPersonUpdateModel), "error");
+        assertEquals(missingPersonUpdateModel.getAttribute("errorMessage"),
+                "Нельзя сохранить изменения: человек с ID = 9999 не найден.");
+
+        ExtendedModelMap missingPersonDeleteModel = new ExtendedModelMap();
+        assertEquals(controller.removePersonPage(9999L, missingPersonDeleteModel), "error");
+        assertEquals(missingPersonDeleteModel.getAttribute("errorMessage"),
+                "Нельзя удалить человека: запись не найдена.");
+
+        Person existingPerson = new Person(6L, "Игорь", "Мужской", 1938, null, "desc");
+        Place moscow = new Place(2L, "Москва", "desc");
+        Place tver = new Place(3L, "Тверь", "desc");
+        Place kazan = new Place(4L, "Казань", "desc");
+        when(personDAO.getById(6L)).thenReturn(existingPerson);
+        when(placeDAO.getById(2L)).thenReturn(moscow);
+        when(placeDAO.getById(3L)).thenReturn(tver);
+        when(placeDAO.getById(4L)).thenReturn(kazan);
+        when(personPlaceDAO.getById(new PersonPlaceId(2L, 6L))).thenReturn(new PersonPlace(existingPerson, moscow));
+        when(personPlaceDAO.getById(new PersonPlaceId(4L, 6L))).thenReturn(new PersonPlace(existingPerson, kazan));
+
+        ExtendedModelMap missingPersonForPlaceModel = new ExtendedModelMap();
+        assertEquals(controller.savePersonPlacePage(9999L, null, 2L, missingPersonForPlaceModel), "error");
+        assertEquals(missingPersonForPlaceModel.getAttribute("errorMessage"),
+                "Нельзя сохранить место: человек с ID = 9999 не найден.");
+
+        ExtendedModelMap missingPlaceModel = new ExtendedModelMap();
+        assertEquals(controller.savePersonPlacePage(6L, null, 9999L, missingPlaceModel), "error");
+        assertEquals(missingPlaceModel.getAttribute("errorMessage"),
+                "Нельзя сохранить место: место с ID = 9999 не найдено.");
+
+        ExtendedModelMap duplicatePlaceModel = new ExtendedModelMap();
+        assertEquals(controller.savePersonPlacePage(6L, null, 2L, duplicatePlaceModel), "error");
+        assertEquals(duplicatePlaceModel.getAttribute("errorMessage"),
+                "Нельзя добавить место: такая связь уже существует.");
+
+        ExtendedModelMap missingOriginalLinkModel = new ExtendedModelMap();
+        assertEquals(controller.savePersonPlacePage(6L, 5L, 3L, missingOriginalLinkModel), "error");
+        assertEquals(missingOriginalLinkModel.getAttribute("errorMessage"),
+                "Нельзя сохранить изменения: исходная связь человека с местом не найдена.");
+
+        ExtendedModelMap duplicateTargetPlaceModel = new ExtendedModelMap();
+        assertEquals(controller.savePersonPlacePage(6L, 4L, 2L, duplicateTargetPlaceModel), "error");
+        assertEquals(duplicateTargetPlaceModel.getAttribute("errorMessage"),
+                "Нельзя сохранить изменения: у человека уже есть связь с этим местом.");
+
+        ExtendedModelMap missingRemovedPlaceLinkModel = new ExtendedModelMap();
+        assertEquals(controller.removePersonPlacePage(6L, 5L, missingRemovedPlaceLinkModel), "error");
+        assertEquals(missingRemovedPlaceLinkModel.getAttribute("errorMessage"),
+                "Нельзя удалить место у человека: связь не найдена.");
+    }
+
+    @Test
+    public void craftedRelationRequestsReturnDedicatedErrors() {
+        PersonDAO personDAO = mock(PersonDAO.class);
+        PlaceDAO placeDAO = mock(PlaceDAO.class);
+        PersonPlaceDAO personPlaceDAO = mock(PersonPlaceDAO.class);
+        RelationDAO relationDAO = mock(RelationDAO.class);
+        PersonController controller = new PersonController(personDAO, placeDAO, personPlaceDAO, relationDAO);
+
+        Person current = new Person(6L, "Игорь", "Мужской", 1938, null, "desc");
+        Person other = new Person(9L, "Наталья", "Женский", 1972, null, "desc");
+        when(personDAO.getById(6L)).thenReturn(current);
+        when(personDAO.getById(9L)).thenReturn(other);
+
+        ExtendedModelMap samePersonModel = new ExtendedModelMap();
+        assertEquals(controller.saveRelationPage(6L, null, 6L, "PARTNER", 2000, null, samePersonModel), "error");
+        assertEquals(samePersonModel.getAttribute("errorMessage"),
+                "Нельзя создать связь человека с самим собой.");
+
+        ExtendedModelMap missingRelationModel = new ExtendedModelMap();
+        assertEquals(controller.saveRelationPage(6L, 9999L, 9L, "PARTNER", 2000, null, missingRelationModel), "error");
+        assertEquals(missingRelationModel.getAttribute("errorMessage"),
+                "Нельзя сохранить изменения: связь с ID = 9999 не найдена.");
+
+        ExtendedModelMap missingCurrentPersonModel = new ExtendedModelMap();
+        assertEquals(controller.saveRelationPage(9999L, null, 9L, "PARTNER", 2000, null, missingCurrentPersonModel), "error");
+        assertEquals(missingCurrentPersonModel.getAttribute("errorMessage"),
+                "Нельзя сохранить связь: человек с ID = 9999 не найден.");
+
+        ExtendedModelMap missingRelatedPersonModel = new ExtendedModelMap();
+        assertEquals(controller.saveRelationPage(6L, null, 9999L, "PARTNER", 2000, null, missingRelatedPersonModel), "error");
+        assertEquals(missingRelatedPersonModel.getAttribute("errorMessage"),
+                "Нельзя сохранить связь: второй человек с ID = 9999 не найден.");
+
+        ExtendedModelMap unknownTypeModel = new ExtendedModelMap();
+        assertEquals(controller.saveRelationPage(6L, null, 9L, "UNKNOWN_KIND", 2000, null, unknownTypeModel), "error");
+        assertEquals(unknownTypeModel.getAttribute("errorMessage"),
+                "Нельзя сохранить связь: указан неизвестный тип связи.");
+
+        ExtendedModelMap missingRelationDeleteModel = new ExtendedModelMap();
+        assertEquals(controller.removeRelationPage(6L, 9999L, missingRelationDeleteModel), "error");
+        assertEquals(missingRelationDeleteModel.getAttribute("errorMessage"),
+                "Нельзя удалить связь: запись не найдена.");
     }
 
     @Test
