@@ -16,8 +16,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void mainPageAndHeaderNavigationWork() {
-        driver.get(baseUrl() + "/");
-        assertTitleEventually("Главная страница");
+        openHomePage();
 
         driver.findElement(By.id("peopleListLink")).click();
         assertTitleEventually("Люди");
@@ -34,32 +33,31 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void mainPageActionButtonsOpenTheirPages() {
-        driver.get(baseUrl() + "/");
-        assertTitleEventually("Главная страница");
-
+        openHomePage();
         driver.findElement(By.id("allPersonsButton")).click();
         assertTitleEventually("Люди");
 
-        driver.get(baseUrl() + "/");
+        openHomePage();
         driver.findElement(By.id("allPlacesButton")).click();
         assertTitleEventually("Места");
 
-        driver.get(baseUrl() + "/");
+        openHomePage();
         driver.findElement(By.id("addPersonButton")).click();
         assertTitleEventually("Добавить человека");
 
-        driver.get(baseUrl() + "/");
+        openHomePage();
         driver.findElement(By.id("generateTreeButton")).click();
         assertTitleEventually("Параметры дерева");
     }
 
     @Test
     public void searchPersonFromMainPageOpensFilteredList() {
-        driver.get(baseUrl() + "/");
+        openHomePage();
         driver.findElement(By.id("homeSearch")).sendKeys("Игорь");
         driver.findElement(By.id("homeSearchButton")).click();
 
         assertTitleEventually("Люди");
+        waitForTextInElement(By.id("personsTable"), "Игорь Михайлович");
 
         WebElement personsTable = driver.findElement(By.id("personsTable"));
         List<WebElement> rows = personsTable.findElements(By.tagName("tr"));
@@ -68,7 +66,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void personPageShowsMainInformation() {
-        driver.get(baseUrl() + "/persons");
+        goToPersonsPageFromHome();
         driver.findElement(By.linkText("Игорь Михайлович")).click();
         assertTitleEventually("Информация о человеке");
 
@@ -90,7 +88,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void personPagePlaceLinkOpensPlaceCard() {
-        driver.get(baseUrl() + "/persons");
+        goToPersonsPageFromHome();
         driver.findElement(By.linkText("Игорь Михайлович")).click();
         driver.findElement(By.id("personPlaceLink-2")).click();
 
@@ -100,7 +98,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void personPageRelationLinkOpensRelatedPersonCard() {
-        driver.get(baseUrl() + "/persons");
+        goToPersonsPageFromHome();
         driver.findElement(By.linkText("Игорь Михайлович")).click();
         driver.findElement(By.id("relationPersonLink-7")).click();
 
@@ -110,8 +108,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void addPlaceScenarioWorks() {
-        driver.get(baseUrl() + "/places");
-        assertTitleEventually("Места");
+        goToPlacesPageFromHome();
 
         driver.findElement(By.id("addPlaceButton")).click();
         assertTitleEventually("Добавить место");
@@ -214,7 +211,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void treeShowsNoConnectionPathWhenPeopleAreDisconnected() {
-        driver.get(baseUrl() + "/persons");
+        goToPersonsPageFromHome();
         driver.findElement(By.id("addPersonFromListButton")).click();
         driver.findElement(By.id("personName")).sendKeys("Изолированный человек");
         new Select(driver.findElement(By.id("personGender"))).selectByVisibleText("Мужской");
@@ -233,8 +230,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void generateTreeWithoutPrimaryPersonShowsInitialState() {
-        driver.get(baseUrl() + "/generateTree");
-        assertTitleEventually("Параметры дерева");
+        goToTreeGeneratorPageFromHome();
         driver.findElement(By.id("buildTreeButton")).click();
 
         assertTitleEventually("Результат построения дерева");
@@ -253,10 +249,10 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void personsListCanBeSortedByBirthYear() {
-        driver.get(baseUrl() + "/persons");
-        assertTitleEventually("Люди");
+        goToPersonsPageFromHome();
         new Select(driver.findElement(By.id("sort"))).selectByValue("birthDate");
         driver.findElement(By.id("searchPersonButton")).click();
+        waitForTextInElement(By.id("personsTable"), "Рюрик Старший");
 
         List<WebElement> rows = driver.findElement(By.id("personsTable")).findElements(By.tagName("tr"));
         assertTrue(rows.get(1).getText().contains("Рюрик Старший"));
@@ -265,10 +261,10 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void personsListCanBeSortedByName() {
-        driver.get(baseUrl() + "/persons");
-        assertTitleEventually("Люди");
+        goToPersonsPageFromHome();
         new Select(driver.findElement(By.id("sort"))).selectByValue("name");
         driver.findElement(By.id("searchPersonButton")).click();
+        waitForTextInElement(By.id("personsTable"), "Алексей Павлович");
 
         List<WebElement> rows = driver.findElement(By.id("personsTable")).findElements(By.tagName("tr"));
         assertTrue(rows.get(1).getText().contains("Алексей Павлович"));
@@ -277,9 +273,10 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void searchWithNoMatchesShowsEmptyState() {
-        driver.get(baseUrl() + "/persons");
+        goToPersonsPageFromHome();
         driver.findElement(By.id("search")).sendKeys("Несуществующий человек");
         driver.findElement(By.id("searchPersonButton")).click();
+        waitForTextInElement(By.id("personsTable"), "Подходящие люди не найдены.");
 
         WebElement personsTable = driver.findElement(By.id("personsTable"));
         assertTrue(personsTable.getText().contains("Подходящие люди не найдены."));
@@ -287,10 +284,11 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void placeSearchFindsExpectedPlace() {
-        driver.get(baseUrl() + "/places");
+        goToPlacesPageFromHome();
         driver.findElement(By.id("placeSearch")).sendKeys("Казань");
         driver.findElement(By.id("searchPlaceButton")).click();
 
+        waitForTextInElement(By.id("placesList"), "Казань");
         String text = driver.findElement(By.id("placesList")).getText();
         assertTrue(text.contains("Казань"));
         assertFalse(text.contains("Москва"));
@@ -298,8 +296,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void placesListShowsAllSeededPlacesWithoutFilter() {
-        driver.get(baseUrl() + "/places");
-        assertTitleEventually("Места");
+        goToPlacesPageFromHome();
 
         String text = driver.findElement(By.id("placesList")).getText();
         assertTrue(text.contains("Тверь"));
@@ -311,16 +308,17 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void placeSearchWithNoMatchesShowsEmptyState() {
-        driver.get(baseUrl() + "/places");
+        goToPlacesPageFromHome();
         driver.findElement(By.id("placeSearch")).sendKeys("Несуществующее место");
         driver.findElement(By.id("searchPlaceButton")).click();
 
+        waitForTextInElement(By.id("placesList"), "Подходящие места не найдены.");
         assertTrue(driver.findElement(By.id("placesList")).getText().contains("Подходящие места не найдены."));
     }
 
     @Test
     public void placePageShowsResidentsAndAllowsNavigationToPerson() {
-        driver.get(baseUrl() + "/places");
+        goToPlacesPageFromHome();
         openPlaceFromList("Москва");
         assertTitleEventually("Информация о месте");
 
@@ -335,9 +333,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void addPersonScenarioWorks() {
-        driver.get(baseUrl() + "/persons");
-        driver.findElement(By.id("addPersonFromListButton")).click();
-        assertTitleEventually("Добавить человека");
+        goToAddPersonPageFromHome();
 
         driver.findElement(By.id("personName")).sendKeys("Тестовый Потомок");
         new Select(driver.findElement(By.id("personGender"))).selectByVisibleText("Мужской");
@@ -355,7 +351,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void editPersonScenarioWorks() {
-        driver.get(baseUrl() + "/persons");
+        goToPersonsPageFromHome();
         driver.findElement(By.linkText("Алексей Павлович")).click();
         driver.findElement(By.id("editPersonLink")).click();
         assertTitleEventually("Редактировать человека");
@@ -379,7 +375,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void personPageEditLinkOpensEditForm() {
-        driver.get(baseUrl() + "/persons");
+        goToPersonsPageFromHome();
         driver.findElement(By.linkText("Игорь Михайлович")).click();
         driver.findElement(By.id("editPersonLink")).click();
 
@@ -389,7 +385,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void personPageTreeLinkOpensTreeResultForThatPerson() {
-        driver.get(baseUrl() + "/persons");
+        goToPersonsPageFromHome();
         driver.findElement(By.linkText("Игорь Михайлович")).click();
         driver.findElement(By.id("personTreeLink")).click();
 
@@ -421,7 +417,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void editPlaceScenarioWorks() {
-        driver.get(baseUrl() + "/places");
+        goToPlacesPageFromHome();
         openPlaceFromList("Казань");
         driver.findElement(By.id("editPlaceLink")).click();
         assertTitleEventually("Редактировать место");
@@ -438,7 +434,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void placePageEditLinkOpensEditForm() {
-        driver.get(baseUrl() + "/places");
+        goToPlacesPageFromHome();
         openPlaceFromList("Москва");
         driver.findElement(By.id("editPlaceLink")).click();
 
@@ -448,9 +444,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void addPersonFormCancelReturnsToPersonsList() {
-        driver.get(baseUrl() + "/persons");
-        driver.findElement(By.id("addPersonFromListButton")).click();
-        assertTitleEventually("Добавить человека");
+        goToAddPersonPageFromHome();
 
         driver.findElement(By.linkText("Отмена")).click();
         assertTitleEventually("Люди");
@@ -458,7 +452,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void deletePersonScenarioWorks() {
-        driver.get(baseUrl() + "/persons");
+        goToPersonsPageFromHome();
         driver.findElement(By.linkText("Алексей Павлович")).click();
         assertTitleEventually("Информация о человеке");
 
@@ -470,7 +464,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void deletePlaceScenarioWorks() {
-        driver.get(baseUrl() + "/places");
+        goToPlacesPageFromHome();
         openPlaceFromList("Новосибирск");
         assertTitleEventually("Информация о месте");
 
@@ -482,7 +476,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void addPersonPlaceScenarioWorks() {
-        driver.get(baseUrl() + "/persons");
+        goToPersonsPageFromHome();
         driver.findElement(By.linkText("Алексей Павлович")).click();
         driver.findElement(By.id("addPersonPlaceLink")).click();
         assertTitleEventually("Добавить место человеку");
@@ -499,7 +493,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void editPersonPlaceScenarioWorks() {
-        driver.get(baseUrl() + "/persons");
+        goToPersonsPageFromHome();
         driver.findElement(By.linkText("Игорь Михайлович")).click();
         driver.findElement(By.id("editPersonPlaceLink-4")).click();
         assertTitleEventually("Редактировать место человека");
@@ -517,7 +511,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void deletePersonPlaceScenarioWorks() {
-        driver.get(baseUrl() + "/persons");
+        goToPersonsPageFromHome();
         driver.findElement(By.linkText("Игорь Михайлович")).click();
         String beforeDelete = driver.findElement(By.id("personPlaces")).getText();
         assertTrue(beforeDelete.contains("Казань"));
@@ -532,7 +526,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void personPlaceFormHtmlValidationPreventsEmptySubmit() {
-        driver.get(baseUrl() + "/persons");
+        goToPersonsPageFromHome();
         driver.findElement(By.linkText("Игорь Михайлович")).click();
         driver.findElement(By.id("addPersonPlaceLink")).click();
         driver.findElement(By.id("savePersonPlaceButton")).click();
@@ -544,7 +538,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void addRelationScenarioWorks() {
-        driver.get(baseUrl() + "/persons");
+        goToPersonsPageFromHome();
         driver.findElement(By.linkText("Алексей Павлович")).click();
         driver.findElement(By.id("addRelationLink")).click();
         assertTitleEventually("Добавить связь");
@@ -564,7 +558,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void editRelationScenarioWorks() {
-        driver.get(baseUrl() + "/persons");
+        goToPersonsPageFromHome();
         driver.findElement(By.linkText("Игорь Михайлович")).click();
         driver.findElement(By.id("editRelationLink-7")).click();
         assertTitleEventually("Редактировать связь");
@@ -585,7 +579,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void deleteRelationScenarioWorks() {
-        driver.get(baseUrl() + "/persons");
+        goToPersonsPageFromHome();
         driver.findElement(By.linkText("Игорь Михайлович")).click();
         String beforeDelete = driver.findElement(By.id("personRelations")).getText();
         assertTrue(beforeDelete.contains("Елена Михайловна"));
@@ -600,7 +594,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void relationFormHtmlValidationPreventsEmptySubmit() {
-        driver.get(baseUrl() + "/persons");
+        goToPersonsPageFromHome();
         driver.findElement(By.linkText("Игорь Михайлович")).click();
         driver.findElement(By.id("addRelationLink")).click();
         driver.findElement(By.id("saveRelationButton")).click();
@@ -613,7 +607,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void editRelationFormCancelReturnsToPersonPage() {
-        driver.get(baseUrl() + "/persons");
+        goToPersonsPageFromHome();
         driver.findElement(By.linkText("Игорь Михайлович")).click();
         driver.findElement(By.id("editRelationLink-7")).click();
         assertTitleEventually("Редактировать связь");
@@ -625,7 +619,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void invalidRelationDatesShowServerSideError() {
-        driver.get(baseUrl() + "/persons");
+        goToPersonsPageFromHome();
         driver.findElement(By.linkText("Игорь Михайлович")).click();
         driver.findElement(By.id("addRelationLink")).click();
         new Select(driver.findElement(By.id("relatedPersonId"))).selectByValue("9");
@@ -642,7 +636,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void invalidPersonDatesShowServerSideError() {
-        driver.get(baseUrl() + "/editPerson");
+        goToAddPersonPageFromHome();
         driver.findElement(By.id("personName")).sendKeys("Неверный человек");
         new Select(driver.findElement(By.id("personGender"))).selectByVisibleText("Женский");
         driver.findElement(By.id("birthYear")).sendKeys("2000");
@@ -657,7 +651,7 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void personFormHtmlValidationPreventsEmptySubmit() {
-        driver.get(baseUrl() + "/editPerson");
+        goToAddPersonPageFromHome();
         driver.findElement(By.id("savePersonButton")).click();
 
         assertTitleEventually("Добавить человека");
@@ -668,7 +662,9 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
 
     @Test
     public void placeFormHtmlValidationPreventsEmptySubmit() {
-        driver.get(baseUrl() + "/editPlace");
+        goToPlacesPageFromHome();
+        driver.findElement(By.id("addPlaceButton")).click();
+        assertTitleEventually("Добавить место");
         driver.findElement(By.id("savePlaceButton")).click();
 
         assertTitleEventually("Добавить место");
@@ -688,9 +684,37 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
         assertEquals(driver.getTitle(), expectedTitle);
     }
 
-    private void openTreePage(String primaryPersonId, String secondaryPersonId, String direction, String depth) {
-        driver.get(baseUrl() + "/generateTree");
+    private void openHomePage() {
+        driver.get(baseUrl() + "/");
+        assertTitleEventually("Главная страница");
+    }
+
+    private void goToPersonsPageFromHome() {
+        openHomePage();
+        driver.findElement(By.id("allPersonsButton")).click();
+        assertTitleEventually("Люди");
+    }
+
+    private void goToPlacesPageFromHome() {
+        openHomePage();
+        driver.findElement(By.id("allPlacesButton")).click();
+        assertTitleEventually("Места");
+    }
+
+    private void goToAddPersonPageFromHome() {
+        openHomePage();
+        driver.findElement(By.id("addPersonButton")).click();
+        assertTitleEventually("Добавить человека");
+    }
+
+    private void goToTreeGeneratorPageFromHome() {
+        openHomePage();
+        driver.findElement(By.id("generateTreeButton")).click();
         assertTitleEventually("Параметры дерева");
+    }
+
+    private void openTreePage(String primaryPersonId, String secondaryPersonId, String direction, String depth) {
+        goToTreeGeneratorPageFromHome();
 
         new Select(driver.findElement(By.id("primaryPersonId"))).selectByValue(primaryPersonId);
         if (secondaryPersonId != null) {
@@ -709,10 +733,11 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
                 .click();
     }
 
+    int max_deadline_ms = 5000;
     // У меня средний по мощности ноутбук, потому я буду чуток ждать, пока страница прогрузится. Логику тестов это не меняет,
     // просто зачастую тесты рандомно ложатся из-за того, что просто не успевает загрузиться другая страница
     private void waitForTitle(String expectedTitle) {
-        long deadline = System.currentTimeMillis() + 3000;
+        long deadline = System.currentTimeMillis() + max_deadline_ms;
         while (System.currentTimeMillis() < deadline) {
             if (expectedTitle.equals(driver.getTitle())) {
                 return;
@@ -725,4 +750,25 @@ public class WebInterfaceSeleniumTest extends AbstractWebSeleniumTest {
             }
         }
     }
+
+    // Такая же логика но с элементами - для решения вопроса с StaleElementReferenceException
+    private void waitForTextInElement(By locator, String expectedText) {
+        long deadline = System.currentTimeMillis() + max_deadline_ms;
+        while (System.currentTimeMillis() < deadline) {
+            try {
+                String actualText = driver.findElement(locator).getText();
+                if (actualText.contains(expectedText)) {
+                    return;
+                }
+            } catch (org.openqa.selenium.StaleElementReferenceException ignored) {
+            }
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+    }
+
 }
